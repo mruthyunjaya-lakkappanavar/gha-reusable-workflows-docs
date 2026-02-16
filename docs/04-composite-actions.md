@@ -30,11 +30,6 @@ flowchart TD
     P1 --> P2["pip cache enabled<br/>python --version ✓"]
     N1 --> N2["npm cache enabled<br/>node --version ✓"]
     G1 --> G2["Go module cache<br/>go version ✓"]
-
-    style IN fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
-    style P2 fill:#111b2e,stroke:#34d399,color:#34d399
-    style N2 fill:#111b2e,stroke:#34d399,color:#34d399
-    style G2 fill:#111b2e,stroke:#34d399,color:#34d399
 ```
 
 ### Implementation

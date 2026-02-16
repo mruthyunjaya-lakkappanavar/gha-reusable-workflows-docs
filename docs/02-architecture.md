@@ -30,16 +30,6 @@ graph TB
     HUB -->|workflow_call| L["<strong>sample-lib-node</strong><br/>HTTP Client Library<br/><em>Matrix CI + Publish + Release</em>"]
 
     P & N & G & L --> S["Slack<br/>#builds · #releases"]
-
-    style HUB fill:#0e1729,stroke:#e5b83a,stroke-width:2px,color:#f0f4f8
-    style WF fill:#111b2e,stroke:#1c2d4a,color:#c9d1d9
-    style ACT fill:#111b2e,stroke:#1c2d4a,color:#c9d1d9
-    style DASH fill:#111b2e,stroke:#1c2d4a,color:#c9d1d9
-    style P fill:#111b2e,stroke:#60a5fa,color:#c9d1d9
-    style N fill:#111b2e,stroke:#34d399,color:#c9d1d9
-    style G fill:#111b2e,stroke:#fb923c,color:#c9d1d9
-    style L fill:#111b2e,stroke:#a78bfa,color:#c9d1d9
-    style S fill:#111b2e,stroke:#34d399,color:#34d399
 ```
 
 ## Repository Structure
@@ -111,9 +101,6 @@ flowchart LR
     G --> H["Security Scan"]
     H --> I["Upload artifacts"]
     I --> J["Slack notify"]
-
-    style C fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
-    style J fill:#111b2e,stroke:#34d399,color:#34d399
 ```
 
 ### Release Flow
@@ -126,9 +113,6 @@ flowchart LR
     D --> E["Creates/updates release PR"]
     E --> F["On merge: GitHub Release"]
     F --> G["Slack → #releases"]
-
-    style C fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
-    style G fill:#111b2e,stroke:#34d399,color:#34d399
 ```
 
 ### Matrix CI Flow
@@ -146,9 +130,6 @@ flowchart TB
     D --> D4["… N × M × K parallel jobs"]
     D --> D5["Node 22 × windows × integration"]
     C & D & E & F --> G["Summary → PR comment"]
-
-    style B fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
-    style D fill:#111b2e,stroke:#a78bfa,color:#c9d1d9
 ```
 
 ### Integration CI Flow
@@ -162,9 +143,6 @@ flowchart LR
     C & D & E --> F["Docker build<br/><em>BuildX → GHCR</em>"]
     F --> G["Deploy staging"]
     G --> H["Deploy production<br/><em>🔒 manual approval</em>"]
-
-    style B fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
-    style H fill:#111b2e,stroke:#34d399,color:#34d399
 ```
 
 ### Publish Flow
@@ -175,9 +153,6 @@ flowchart LR
     B --> C["Build package"]
     C --> D["Publish staging<br/><em>@next tag</em>"]
     D --> E["Publish production<br/><em>@latest tag · 🔒 approval</em>"]
-
-    style B fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
-    style E fill:#111b2e,stroke:#34d399,color:#34d399
 ```
 
 ## Security Considerations

@@ -75,9 +75,6 @@ flowchart LR
     B --> C["GitHub API<br/><em>5 000 req/hr</em>"]
     C --> D["Generate<br/>data/*.json"]
     D --> E["Commit → Pages deploy"]
-
-    style B fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
-    style E fill:#111b2e,stroke:#34d399,color:#34d399
 ```
 
 ### Dashboard Data Files

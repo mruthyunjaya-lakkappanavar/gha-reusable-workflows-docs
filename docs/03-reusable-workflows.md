@@ -38,11 +38,6 @@ flowchart LR
     R["**Summary**<br/>PR comment"]
 
     L & T & S --> R
-
-    style L fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
-    style T fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
-    style S fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
-    style R fill:#111b2e,stroke:#34d399,color:#34d399
 ```
 
 ### Usage Example
@@ -165,9 +160,6 @@ flowchart LR
     F["Deploy production<br/><em>🔐 approval</em>"]
 
     A & B & C --> D --> E --> F
-
-    style D fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
-    style F fill:#111b2e,stroke:#34d399,color:#34d399
 ```
 
 ### Service Containers
@@ -237,9 +229,6 @@ flowchart LR
     C["Publish Production<br/><em>@latest · PyPI · 🔐 approval</em>"]
 
     A --> B --> C
-
-    style A fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
-    style C fill:#111b2e,stroke:#34d399,color:#34d399
 ```
 
 ### Permissions

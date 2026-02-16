@@ -25,12 +25,6 @@ graph TD
     HUB -->|workflow_call| B["sample-app-node<br/><em>~15 lines</em>"]
     HUB -->|workflow_call| C["sample-app-go<br/><em>~15 lines</em>"]
     HUB -->|workflow_call| D["sample-lib-node<br/><em>~15 lines</em>"]
-
-    style HUB fill:#1a2744,stroke:#e5b83a,stroke-width:2px,color:#f0f4f8
-    style A fill:#111b2e,stroke:#60a5fa,color:#c9d1d9
-    style B fill:#111b2e,stroke:#34d399,color:#c9d1d9
-    style C fill:#111b2e,stroke:#fb923c,color:#c9d1d9
-    style D fill:#111b2e,stroke:#a78bfa,color:#c9d1d9
 ```
 
 ### Capabilities Demonstrated
