@@ -1,0 +1,83 @@
+site_name: GHA Reusable Workflows — POC Documentation
+site_description: Proof of Concept documentation for centralized CI/CD using GitHub Actions reusable workflows
+site_url: https://mruthyunjaya-lakkappanavar.github.io/gha-reusable-workflows-docs/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: slate
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+
+repo_name: github-shared-workflows
+repo_url: https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows
+
+nav:
+  - Home: index.md
+  - Part 1 — Overview:
+    - Executive Summary: 01-executive-summary.md
+    - Architecture: 02-architecture.md
+    - Reusable Workflows: 03-reusable-workflows.md
+    - Composite Actions: 04-composite-actions.md
+    - Consumer Repos: 05-consumer-repos.md
+  - Part 2 — Deep Dive:
+    - GHA Platform Capabilities: 06-jenkins-to-gha-migration.md
+    - Live Dashboard: 07-dashboard.md
+    - Advanced Patterns: 08-advanced-patterns.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.mark
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/mruthyunjaya-lakkappanavar

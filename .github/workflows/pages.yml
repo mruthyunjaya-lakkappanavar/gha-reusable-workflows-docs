@@ -23,13 +23,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install MkDocs Material
+        run: pip install mkdocs-material
+
+      - name: Build MkDocs documentation
+        run: mkdocs build --strict
+
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          # Copy MkDocs output (rendered docs) into _site/docs/
+          cp -r site _site/docs
+          # Copy presentation deck
+          cp -r presentation _site/presentation
+          # Copy root landing page
+          cp index.html _site/index.html
+          # Copy README for GitHub
+          cp README.md _site/README.md
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: '_site'
 
       - name: Deploy to GitHub Pages
         id: deployment
