@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GHA Reusable Workflows — POC</title>
+<style>
+:root {
+  --navy: #0a1628;
+  --navy-mid: #122040;
+  --gold: #e8b931;
+  --gold-dim: rgba(232,185,49,0.15);
+  --text: #e8ecf1;
+  --text-muted: #8d99ae;
+  --border: #1e3260;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--navy);
+  color: var(--text);
+  font-family: var(--font);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 0.3rem; }
+.gold { color: var(--gold); }
+.subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 40px; }
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  max-width: 900px;
+  width: 100%;
+}
+.card {
+  background: var(--navy-mid);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px 28px;
+  text-decoration: none;
+  color: var(--text);
+  transition: all 0.25s;
+  border-left: 3px solid var(--gold);
+}
+.card:hover {
+  transform: translateY(-4px);
+  border-color: var(--gold);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.card-icon { font-size: 2.5rem; margin-bottom: 12px; display: block; }
+.card h2 { font-size: 1.3rem; margin-bottom: 8px; color: var(--gold); }
+.card p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; }
+.badge {
+  display: inline-block; padding: 4px 12px;
+  border-radius: 20px; font-size: 0.7rem;
+  font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--gold-dim); color: var(--gold);
+  margin-top: 12px;
+}
+footer {
+  margin-top: 48px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+footer a { color: var(--gold); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<h1>⚡ GHA Reusable Workflows <span class="gold">POC</span></h1>
+<p class="subtitle">Proof of Concept — Centralized CI/CD with GitHub Actions</p>
+
+<div class="cards">
+  <a href="presentation/" class="card">
+    <span class="card-icon">📽️</span>
+    <h2>Presentation Deck</h2>
+    <p>Interactive slide deck covering the POC overview and technical deep dive. Navy &amp; gold theme with keyboard/touch navigation.</p>
+    <span class="badge">14 Slides</span>
+  </a>
+
+  <a href="docs/index.md" class="card">
+    <span class="card-icon">📖</span>
+    <h2>Documentation</h2>
+    <p>Comprehensive docs — Part 1 (overview &amp; capabilities) and Part 2 (architecture, patterns, and technical reference).</p>
+    <span class="badge">8 Docs</span>
+  </a>
+
+  <a href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows" class="card">
+    <span class="card-icon">⚡</span>
+    <h2>Source: Shared Workflows</h2>
+    <p>The central hub repo — 5 reusable workflows, 2 composite actions, and a live CI/CD dashboard.</p>
+    <span class="badge">View on GitHub</span>
+  </a>
+</div>
+
+<footer>
+  <p>Built by <a href="https://github.com/mruthyunjaya-lakkappanavar">mruthyunjaya-lakkappanavar</a></p>
+</footer>
+
+</body>
+</html>

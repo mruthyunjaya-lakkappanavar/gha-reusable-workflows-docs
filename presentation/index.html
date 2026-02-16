@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GitHub Actions — Reusable Workflows POC</title>
+<style>
+/* ═══════════════════════════════════════════════════════
+   THEME: Navy Blue + Golden Yellow
+   Structure: Part 1 (High-level) → Part 2 (Details)
+   ═══════════════════════════════════════════════════════ */
+:root {
+  --navy: #0a1628;
+  --navy-mid: #122040;
+  --navy-light: #1a2d55;
+  --gold: #e8b931;
+  --gold-soft: #f5d370;
+  --gold-dim: rgba(232,185,49,0.15);
+  --text: #e8ecf1;
+  --text-muted: #8d99ae;
+  --white: #ffffff;
+  --green: #4ade80;
+  --border: #1e3260;
+  --radius: 12px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --mono: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; font-family: var(--font); background: var(--navy); color: var(--text); }
+
+/* ─── Slide Container ─── */
+.deck { position: relative; width: 100vw; height: 100vh; }
+.slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  padding: 50px 80px;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.45s ease, transform 0.45s ease;
+  transform: translateX(30px);
+}
+.slide.active { opacity: 1; visibility: visible; transform: translateX(0); }
+.slide.exit-left { opacity: 0; transform: translateX(-30px); }
+
+/* ─── Typography ─── */
+h1 { font-size: 3.2rem; font-weight: 700; line-height: 1.15; color: var(--white); }
+h2 { font-size: 2rem; font-weight: 600; margin-bottom: 1rem; color: var(--gold); }
+h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.6rem; color: var(--white); }
+p, li { font-size: 1.1rem; line-height: 1.7; color: var(--text-muted); }
+.subtitle { font-size: 1.25rem; color: var(--text-muted); margin-top: 0.4rem; }
+.big-number { font-size: 3.5rem; font-weight: 800; color: var(--gold); line-height: 1; }
+.big-label { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
+.gold { color: var(--gold); }
+.green { color: var(--green); }
+
+/* ─── Layout ─── */
+.content { max-width: 1200px; width: 100%; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: start; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+.four-col { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; }
+
+/* ─── Cards ─── */
+.card {
+  background: var(--navy-mid);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+.card-gold { border-left: 3px solid var(--gold); }
+.card-icon { font-size: 2rem; margin-bottom: 10px; display: block; }
+.highlight-bar {
+  border-left: 3px solid var(--gold);
+  padding-left: 14px;
+  margin: 6px 0;
+}
+
+/* ─── Badges ─── */
+.badge {
+  display: inline-block; padding: 4px 14px;
+  border-radius: 20px; font-size: 0.75rem;
+  font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.badge-gold { background: var(--gold-dim); color: var(--gold); }
+.badge-green { background: rgba(74,222,128,0.15); color: var(--green); }
+
+/* ─── Code ─── */
+pre {
+  background: var(--navy);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 22px;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  overflow-x: auto;
+  color: var(--text);
+}
+.inline-code {
+  background: var(--gold-dim);
+  color: var(--gold);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.88em;
+}
+
+/* ─── Tables ─── */
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+th { color: var(--gold); font-weight: 600; background: var(--navy-mid); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+td { color: var(--text-muted); }
+tr:hover td { color: var(--text); }
+
+/* ─── Feature Lists ─── */
+ul.features { list-style: none; }
+ul.features li { padding: 5px 0; padding-left: 24px; position: relative; }
+ul.features li::before { content: "▸"; position: absolute; left: 0; color: var(--gold); font-weight: bold; }
+
+/* ─── Diagram ─── */
+.diagram {
+  background: var(--navy-mid);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  white-space: pre;
+  overflow-x: auto;
+  color: var(--text-muted);
+}
+
+/* ─── Flow ─── */
+.flow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.flow-step {
+  background: var(--navy-mid);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 18px;
+  text-align: center;
+  min-width: 110px;
+}
+.flow-arrow { color: var(--gold); font-size: 1.2rem; font-weight: bold; }
+
+/* ─── Section Divider ─── */
+.divider-slide {
+  background: linear-gradient(135deg, var(--navy-mid) 0%, var(--navy) 100%);
+  text-align: center;
+}
+.divider-slide h1 { color: var(--gold); font-size: 2.5rem; }
+.divider-slide .divider-line {
+  width: 80px; height: 3px;
+  background: var(--gold);
+  margin: 20px auto;
+  border-radius: 2px;
+}
+
+/* ─── Title Slide ─── */
+.title-slide { text-align: center; }
+.title-slide h1 { font-size: 3.4rem; }
+.title-logo { font-size: 4.5rem; margin-bottom: 16px; display: block; }
+.meta { margin-top: 30px; font-size: 0.9rem; color: var(--text-muted); }
+
+/* ─── Part indicator ─── */
+.part-label {
+  position: absolute;
+  top: 20px; right: 30px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.7;
+}
+
+/* ─── Navigation ─── */
+.nav {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 14px;
+  background: var(--navy-mid);
+  border: 1px solid var(--border);
+  border-radius: 40px;
+  padding: 8px 18px;
+  z-index: 1000;
+}
+.nav button {
+  background: none; border: none;
+  color: var(--text-muted); font-size: 1.1rem;
+  cursor: pointer; padding: 4px 8px;
+  border-radius: 6px; transition: all 0.2s;
+}
+.nav button:hover { color: var(--gold); background: var(--gold-dim); }
+.slide-counter { font-size: 0.8rem; color: var(--text-muted); min-width: 56px; text-align: center; }
+.dots { display: flex; gap: 5px; }
+.dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--border); cursor: pointer; transition: all 0.3s;
+}
+.dot.active { background: var(--gold); transform: scale(1.3); }
+.dot.part2 { background: var(--navy-light); }
+.dot.part2.active { background: var(--gold-soft); transform: scale(1.3); }
+
+/* ─── Responsive ─── */
+@media (max-width: 900px) {
+  .slide { padding: 24px 20px; }
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.4rem; }
+  .two-col, .three-col, .four-col { grid-template-columns: 1fr; }
+  .big-number { font-size: 2.5rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  PART 1 — HIGH-LEVEL OVERVIEW  (Slides 1–7)            ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+
+<!-- ═══════ SLIDE 1: TITLE ═══════ -->
+<div class="slide active title-slide" data-slide="0" data-part="1">
+  <div class="content">
+    <span class="title-logo">⚡</span>
+    <h1>GitHub Actions<br/><span class="gold">Reusable Workflows</span></h1>
+    <p class="subtitle">Proof of Concept — Centralized CI/CD Platform</p>
+    <div class="meta">
+      <span class="badge badge-gold">POC Complete</span>&nbsp;
+      <span class="badge badge-green">Production-Ready Patterns</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 2: THE IDEA ═══════ -->
+<div class="slide" data-slide="1" data-part="1">
+  <span class="part-label">Part 1 — Overview</span>
+  <div class="content">
+    <h2>The Idea</h2>
+    <p style="color:var(--text);font-size:1.2rem;margin-bottom:28px;">
+      Build a <strong class="gold">centralized CI/CD platform</strong> using GitHub Actions — where every repository gets full pipeline capabilities from a single shared source, with minimal configuration.
+    </p>
+    <div class="two-col">
+      <div class="card card-gold">
+        <h3>The Challenge</h3>
+        <ul class="features">
+          <li>Every repo duplicates CI/CD config</li>
+          <li>Changes require updating repos individually</li>
+          <li>Inconsistent quality gates across teams</li>
+          <li>Slow onboarding of new projects</li>
+        </ul>
+      </div>
+      <div class="card card-gold">
+        <h3>Our Approach</h3>
+        <ul class="features">
+          <li>One central repo owns all pipeline logic</li>
+          <li>Repos adopt with <strong class="gold">~15 lines</strong> of YAML</li>
+          <li>Consistent lint → test → scan → notify flow</li>
+          <li>New project CI/CD in <strong class="gold">5 minutes</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 3: WHAT WE DEMONSTRATED ═══════ -->
+<div class="slide" data-slide="2" data-part="1">
+  <span class="part-label">Part 1 — Overview</span>
+  <div class="content">
+    <h2>What We Demonstrated</h2>
+    <p style="color:var(--text);margin-bottom:24px;">A working POC across <strong class="gold">3 languages</strong>, <strong class="gold">4 consumer repos</strong>, and a <strong class="gold">live dashboard</strong> — all powered by shared workflows.</p>
+    <div class="four-col">
+      <div class="card" style="text-align:center;">
+        <span class="big-number">5</span>
+        <div class="big-label">Reusable Workflows</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <span class="big-number">4</span>
+        <div class="big-label">Consumer Repos</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <span class="big-number">3</span>
+        <div class="big-label">Languages</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <span class="big-number">2</span>
+        <div class="big-label">Composite Actions</div>
+      </div>
+    </div>
+    <div style="margin-top:24px;">
+      <div class="three-col">
+        <div class="card"><span class="card-icon">🐍</span><h3>Python</h3><p>FastAPI · SQLAlchemy · pytest</p></div>
+        <div class="card"><span class="card-icon">📦</span><h3>Node.js / TypeScript</h3><p>Express · Jest · npm publishing</p></div>
+        <div class="card"><span class="card-icon">🐹</span><h3>Go</h3><p>gorilla/mux · go test · golangci-lint</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 4: KEY CAPABILITIES ═══════ -->
+<div class="slide" data-slide="3" data-part="1">
+  <span class="part-label">Part 1 — Overview</span>
+  <div class="content">
+    <h2>Key Capabilities</h2>
+    <div class="three-col">
+      <div class="card card-gold">
+        <span class="card-icon">🔄</span>
+        <h3>Centralized Pipelines</h3>
+        <p>Define once, reuse everywhere. One change updates all consumers instantly.</p>
+      </div>
+      <div class="card card-gold">
+        <span class="card-icon">🧪</span>
+        <h3>Multi-Stage Testing</h3>
+        <p>Sanity → Regression → Performance — with real database services.</p>
+      </div>
+      <div class="card card-gold">
+        <span class="card-icon">🔐</span>
+        <h3>Built-in Security</h3>
+        <p>Automated vulnerability scanning (Trivy) in every pipeline run.</p>
+      </div>
+      <div class="card card-gold">
+        <span class="card-icon">🚀</span>
+        <h3>Staged Deployments</h3>
+        <p>Environment gates with approval workflows for staging → production.</p>
+      </div>
+      <div class="card card-gold">
+        <span class="card-icon">🖥️</span>
+        <h3>Cross-Platform CI</h3>
+        <p>Matrix builds: multiple versions × operating systems × test types, in parallel.</p>
+      </div>
+      <div class="card card-gold">
+        <span class="card-icon">📊</span>
+        <h3>Observability</h3>
+        <p>Live dashboard + Slack notifications — cross-repo visibility at a glance.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 5: HOW ADOPTION WORKS ═══════ -->
+<div class="slide" data-slide="4" data-part="1">
+  <span class="part-label">Part 1 — Overview</span>
+  <div class="content">
+    <h2>How Repos Adopt Shared Workflows</h2>
+    <div class="two-col">
+      <div>
+        <h3 style="margin-bottom:14px;">A consumer repo adds <span class="gold">~15 lines</span></h3>
+        <pre><span style="color:var(--text-muted)"># .github/workflows/ci.yml</span>
+<span style="color:var(--gold)">name:</span> CI
+<span style="color:var(--gold)">on:</span> [push, pull_request]
+
+<span style="color:var(--gold)">jobs:</span>
+  <span style="color:var(--gold)">ci:</span>
+    <span style="color:var(--gold-soft)">uses:</span> org/shared-workflows/
+      .github/workflows/reusable-ci.yml@main
+    <span style="color:var(--gold)">with:</span>
+      <span style="color:var(--green)">language:</span> python
+      <span style="color:var(--green)">language_version:</span> "3.11"
+      <span style="color:var(--green)">enable_lint:</span> true
+      <span style="color:var(--green)">enable_security_scan:</span> true
+    <span style="color:var(--gold)">secrets:</span>
+      <span style="color:var(--green)">SLACK_WEBHOOK_URL:</span> ${{ secrets... }}</pre>
+      </div>
+      <div>
+        <h3 style="margin-bottom:14px;">What runs automatically</h3>
+        <div class="card" style="margin-bottom:10px;">
+          <div class="highlight-bar"><strong class="green">✓</strong> <strong>Lint</strong> — flake8 / ESLint / golangci-lint</div>
+        </div>
+        <div class="card" style="margin-bottom:10px;">
+          <div class="highlight-bar"><strong class="green">✓</strong> <strong>Test</strong> — pytest / jest / go test + coverage</div>
+        </div>
+        <div class="card" style="margin-bottom:10px;">
+          <div class="highlight-bar"><strong class="green">✓</strong> <strong>Security Scan</strong> — Trivy vulnerability scanning</div>
+        </div>
+        <div class="card" style="margin-bottom:10px;">
+          <div class="highlight-bar"><strong class="green">✓</strong> <strong>Slack</strong> — Color-coded pass/fail alerts</div>
+        </div>
+        <div class="card">
+          <div class="highlight-bar"><strong class="green">✓</strong> <strong>Summary</strong> — CI results in Actions UI</div>
+        </div>
+        <div class="card" style="margin-top:12px;text-align:center;">
+          <p style="color:var(--text);">No pipeline code in app repos.</p>
+          <p>All logic lives in the shared workflows repo.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 6: WHAT THIS PROVES ═══════ -->
+<div class="slide" data-slide="5" data-part="1">
+  <span class="part-label">Part 1 — Overview</span>
+  <div class="content">
+    <h2>What This POC Proves</h2>
+    <div class="two-col">
+      <div>
+        <div class="card card-gold" style="margin-bottom:14px;">
+          <h3>🎯 Hands-on GHA Expertise</h3>
+          <p style="color:var(--text);">We've built and validated production-grade patterns — not just theory.</p>
+          <ul class="features" style="margin-top:10px;">
+            <li>Reusable workflow design & parameterization</li>
+            <li>Composite action development</li>
+            <li>Matrix strategy with dynamic expansion</li>
+            <li>Service containers for integration testing</li>
+            <li>Environment protection rules & approval gates</li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <div class="card card-gold" style="margin-bottom:14px;">
+          <h3>🚀 Ready for Real Workloads</h3>
+          <p style="color:var(--text);">The patterns demonstrated here translate directly to production use.</p>
+          <ul class="features" style="margin-top:10px;">
+            <li>New GHA workflow creation from scratch</li>
+            <li>Centralized governance for organizations</li>
+            <li>OIDC-based cloud authentication (AWS/GCP/Azure)</li>
+            <li>Docker build, publish, and deploy pipelines</li>
+            <li>Existing pipeline modernization or migration</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="text-align:center;margin-top:20px;background:var(--navy-light);border-color:var(--gold);">
+      <p style="color:var(--text);font-size:1.15rem;">
+        <strong class="gold">Bottom line:</strong> We're equipped to build, optimize, or migrate any CI/CD workflow in GitHub Actions.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 7: LIVE DASHBOARD ═══════ -->
+<div class="slide" data-slide="6" data-part="1">
+  <span class="part-label">Part 1 — Overview</span>
+  <div class="content">
+    <h2>Live CI/CD Dashboard</h2>
+    <p style="color:var(--text);margin-bottom:20px;">A zero-dependency GitHub Pages dashboard providing cross-repo workflow visibility.</p>
+    <div class="two-col">
+      <div>
+        <div class="card card-gold" style="margin-bottom:16px;">
+          <h3>Features</h3>
+          <ul class="features">
+            <li>Health overview — pass rate, avg duration, streaks</li>
+            <li>Per-repo pipeline cards with job status</li>
+            <li>Workflow timeline across all repos</li>
+            <li>Build insights by language, workflow, contributor</li>
+            <li>Repo detail drill-down</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Tech Approach</h3>
+          <p>Scheduled workflow fetches GitHub API data → generates static JSON → visitors load zero-API-call pages. Vanilla HTML/CSS/JS — no framework dependencies.</p>
+        </div>
+      </div>
+      <div class="card" style="background:var(--navy-light);">
+        <h3 style="text-align:center;margin-bottom:14px;">Health Overview</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div style="text-align:center;"><span class="big-number green" style="font-size:2.2rem;">96%</span><br/><span class="big-label">Pass Rate</span></div>
+          <div style="text-align:center;"><span class="big-number" style="font-size:2.2rem;">4</span><br/><span class="big-label">Active Repos</span></div>
+          <div style="text-align:center;"><span class="big-number" style="font-size:2.2rem;color:var(--gold-soft);">2m</span><br/><span class="big-label">Avg Duration</span></div>
+          <div style="text-align:center;"><span class="big-number green" style="font-size:2.2rem;">12</span><br/><span class="big-label">Success Streak</span></div>
+        </div>
+        <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span class="badge badge-green" style="min-width:18px;text-align:center;padding:2px 6px;">●</span><span style="font-size:0.85rem;">sample-app-python</span><span style="margin-left:auto;font-size:0.75rem;color:var(--text-muted);">2m ago</span></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span class="badge badge-green" style="min-width:18px;text-align:center;padding:2px 6px;">●</span><span style="font-size:0.85rem;">sample-lib-node</span><span style="margin-left:auto;font-size:0.75rem;color:var(--text-muted);">18m ago</span></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span class="badge badge-green" style="min-width:18px;text-align:center;padding:2px 6px;">●</span><span style="font-size:0.85rem;">sample-app-node</span><span style="margin-left:auto;font-size:0.75rem;color:var(--text-muted);">1h ago</span></div>
+          <div style="display:flex;align-items:center;gap:8px;"><span class="badge badge-green" style="min-width:18px;text-align:center;padding:2px 6px;">●</span><span style="font-size:0.85rem;">sample-app-go</span><span style="margin-left:auto;font-size:0.75rem;color:var(--text-muted);">1h ago</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  DIVIDER — PART 2                                       ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+
+<div class="slide divider-slide" data-slide="7" data-part="divider">
+  <div class="content">
+    <p style="font-size:0.85rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--text-muted);margin-bottom:12px;">Part 2</p>
+    <h1>Technical Deep Dive</h1>
+    <div class="divider-line"></div>
+    <p class="subtitle" style="max-width:600px;margin:0 auto;">Architecture, workflow details, advanced patterns, and integration examples.</p>
+    <p style="margin-top:24px;font-size:0.9rem;color:var(--text-muted);">Navigate forward for details, or press <strong style="color:var(--gold)">Home</strong> to return to overview.</p>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  PART 2 — TECHNICAL DETAILS  (Slides 9–14)             ║
+     ╚══════════════════════════════════════════════════════════╝ -->
+
+<!-- ═══════ SLIDE 9: ARCHITECTURE ═══════ -->
+<div class="slide" data-slide="8" data-part="2">
+  <span class="part-label">Part 2 — Details</span>
+  <div class="content">
+    <h2>Architecture — Hub & Spoke</h2>
+    <div class="diagram">                     github-shared-workflows (Hub)
+     ┌──────────────────────────────────────────────────────────┐
+     │  Workflows:                    Actions:                  │
+     │  ├─ reusable-ci.yml            ├─ setup-toolchain/       │
+     │  ├─ reusable-matrix-ci.yml     └─ slack-notify/          │
+     │  ├─ reusable-integration-ci                              │
+     │  ├─ reusable-publish.yml       Dashboard:                │
+     │  └─ reusable-release.yml       └─ GitHub Pages (live)    │
+     └──────────┬──────────┬──────────┬──────────┬──────────────┘
+                │          │          │          │
+         workflow_call  workflow_call  wf_call  wf_call
+                │          │          │          │
+           ┌────▼───┐ ┌────▼───┐ ┌───▼────┐ ┌───▼────────┐
+           │ Python │ │ Node   │ │ Go     │ │ Node Lib   │
+           │ App    │ │ App    │ │ App    │ │ (npm pkg)  │
+           │ ~15LOC │ │ ~15LOC │ │ ~15LOC │ │ ~30LOC     │
+           └────────┘ └────────┘ └────────┘ └────────────┘</div>
+    <p style="margin-top:14px;">Consumer repos carry zero CI/CD logic beyond the <span class="inline-code">workflow_call</span> invocation.</p>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 10: WORKFLOW CATALOG ═══════ -->
+<div class="slide" data-slide="9" data-part="2">
+  <span class="part-label">Part 2 — Details</span>
+  <div class="content">
+    <h2>Workflow Catalog</h2>
+    <table>
+      <thead><tr><th>Workflow</th><th>What It Does</th><th>Consumer Repos</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td style="color:var(--text)">reusable-ci.yml</td><td>Lint → Test → Security Scan → Slack</td><td>Python, Node, Go apps</td><td><span class="badge badge-green">Active</span></td></tr>
+        <tr><td style="color:var(--text)">reusable-matrix-ci.yml</td><td>N versions × M OSes × K test types</td><td>sample-lib-node</td><td><span class="badge badge-green">Active</span></td></tr>
+        <tr><td style="color:var(--text)">reusable-integration-ci.yml</td><td>Services + Docker + Deploy gates</td><td>sample-app-python</td><td><span class="badge badge-green">Active</span></td></tr>
+        <tr><td style="color:var(--text)">reusable-publish.yml</td><td>Staging → Production with approvals</td><td>sample-lib-node</td><td><span class="badge badge-green">Active</span></td></tr>
+        <tr><td style="color:var(--text)">reusable-release.yml</td><td>Semver + Changelog + GitHub Releases</td><td>Python, Node apps</td><td><span class="badge badge-green">Active</span></td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:20px;">
+      <div class="two-col">
+        <div class="card">
+          <h3>Composite Actions</h3>
+          <ul class="features">
+            <li><strong>setup-toolchain</strong> — Python/Node/Go setup + dependency caching</li>
+            <li><strong>slack-notify</strong> — Color-coded Slack alerts (Block Kit)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Language Detection</h3>
+          <p>One workflow handles all languages. <span class="inline-code">language</span> input drives tool setup, lint command, test runner, and cache strategy automatically.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 11: INTEGRATION CI DEEP DIVE ═══════ -->
+<div class="slide" data-slide="10" data-part="2">
+  <span class="part-label">Part 2 — Details</span>
+  <div class="content">
+    <h2>Integration CI — Full Pipeline</h2>
+    <p style="color:var(--text);margin-bottom:16px;">sample-app-python: multi-stage pipeline with database services and staged deployment.</p>
+    <div class="flow" style="margin-bottom:22px;">
+      <div class="flow-step"><strong>Sanity</strong><br/><small style="color:var(--text-muted)">PostgreSQL + Redis</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step"><strong>Regression</strong><br/><small style="color:var(--text-muted)">Version matrix</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step"><strong>Performance</strong><br/><small style="color:var(--text-muted)">Load tests</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step"><strong>Docker</strong><br/><small style="color:var(--text-muted)">Build + Push</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step" style="border-color:var(--gold);"><strong>Staging</strong><br/><small style="color:var(--gold)">auto</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step" style="border-color:var(--green);"><strong>Production</strong><br/><small style="color:var(--green)">approval</small></div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <h3>Service Containers</h3>
+        <pre style="font-size:0.78rem;"><span style="color:var(--gold)">services:</span>
+  <span style="color:var(--green)">postgres:</span>
+    <span style="color:var(--green)">image:</span> postgres:16
+    <span style="color:var(--green)">ports:</span> ["5432:5432"]
+    <span style="color:var(--green)">options:</span> --health-cmd pg_isready
+  <span style="color:var(--green)">redis:</span>
+    <span style="color:var(--green)">image:</span> redis:7-alpine
+    <span style="color:var(--green)">ports:</span> ["6379:6379"]</pre>
+      </div>
+      <div class="card">
+        <h3>Docker Build with Layer Cache</h3>
+        <pre style="font-size:0.78rem;"><span style="color:var(--gold)">- uses:</span> docker/build-push-action@v5
+  <span style="color:var(--gold)">with:</span>
+    <span style="color:var(--green)">push:</span> true
+    <span style="color:var(--green)">tags:</span> ghcr.io/org/app:${{ sha }}
+    <span style="color:var(--green)">cache-from:</span> type=gha
+    <span style="color:var(--green)">cache-to:</span> type=gha,mode=max</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 12: MATRIX + PUBLISH ═══════ -->
+<div class="slide" data-slide="11" data-part="2">
+  <span class="part-label">Part 2 — Details</span>
+  <div class="content">
+    <h2>Matrix CI + Package Publishing</h2>
+    <div class="two-col">
+      <div>
+        <h3>Dynamic Matrix — <span class="gold">18 Parallel Jobs</span></h3>
+        <p style="margin-bottom:14px;">Consumer passes axes as JSON strings; shared workflow expands via <span class="inline-code">fromJSON()</span>.</p>
+        <table style="font-size:0.9rem;">
+          <thead><tr><th>Axis</th><th>Values</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--text)">Node.js</td><td>18, 20, 22</td></tr>
+            <tr><td style="color:var(--text)">OS</td><td>Ubuntu, macOS, Windows</td></tr>
+            <tr><td style="color:var(--text)">Test Type</td><td>Unit, Integration</td></tr>
+          </tbody>
+        </table>
+        <pre style="margin-top:14px;font-size:0.78rem;"><span style="color:var(--gold)">with:</span>
+  <span style="color:var(--green)">language_versions:</span> '["18","20","22"]'
+  <span style="color:var(--green)">os_matrix:</span> '["ubuntu-latest",
+               "macos-latest",
+               "windows-latest"]'
+  <span style="color:var(--green)">test_types:</span> '["unit","integration"]'</pre>
+      </div>
+      <div>
+        <h3>Staged Package Publishing</h3>
+        <p style="margin-bottom:14px;">Two-stage publish with approval gate between staging and production.</p>
+        <div class="flow" style="flex-direction:column;align-items:stretch;gap:8px;">
+          <div class="flow-step" style="width:100%;"><strong>Build & Test</strong><br/><small style="color:var(--text-muted)">Type-check + Unit + Integration</small></div>
+          <div style="text-align:center;"><span class="flow-arrow">↓</span></div>
+          <div class="flow-step" style="width:100%;border-color:var(--gold);"><strong>Publish to Staging</strong><br/><small style="color:var(--gold)">npm publish --tag next</small></div>
+          <div style="text-align:center;"><span class="flow-arrow">↓ <small style="color:var(--text-muted)">approval gate</small></span></div>
+          <div class="flow-step" style="width:100%;border-color:var(--green);"><strong>Promote to Production</strong><br/><small style="color:var(--green)">npm publish --tag latest</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 13: ADVANCED PATTERNS ═══════ -->
+<div class="slide" data-slide="12" data-part="2">
+  <span class="part-label">Part 2 — Details</span>
+  <div class="content">
+    <h2>Advanced GHA Patterns Demonstrated</h2>
+    <div class="three-col">
+      <div class="card card-gold"><span class="card-icon">🧩</span><h3>Dynamic Matrix</h3><p><span class="inline-code">fromJSON()</span> expands axes from runtime inputs.</p></div>
+      <div class="card card-gold"><span class="card-icon">🐘</span><h3>Service Containers</h3><p>PostgreSQL + Redis as native job services.</p></div>
+      <div class="card card-gold"><span class="card-icon">🚪</span><h3>Environment Gates</h3><p>UI-based approval + deployment history.</p></div>
+      <div class="card card-gold"><span class="card-icon">🐳</span><h3>Docker BuildX + Cache</h3><p>GHA-backed layer cache for fast rebuilds.</p></div>
+      <div class="card card-gold"><span class="card-icon">🔐</span><h3>OIDC Federation</h3><p>Secretless cloud auth via <span class="inline-code">id-token: write</span>.</p></div>
+      <div class="card card-gold"><span class="card-icon">📊</span><h3>Job Summaries</h3><p>Rich markdown reports in the Actions UI.</p></div>
+      <div class="card card-gold"><span class="card-icon">⚡</span><h3>Concurrency Controls</h3><p>Auto-cancel redundant runs on new pushes.</p></div>
+      <div class="card card-gold"><span class="card-icon">🛤️</span><h3>Path Triggers</h3><p>Skip CI for irrelevant file changes.</p></div>
+      <div class="card card-gold"><span class="card-icon">📦</span><h3>Artifact Passing</h3><p>Build once, deploy many across jobs.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 14: CLOSING ═══════ -->
+<div class="slide title-slide" data-slide="13" data-part="2">
+  <div class="content">
+    <span class="title-logo">🔗</span>
+    <h1>Explore the <span class="gold">Code</span></h1>
+    <div style="margin-top:24px;">
+      <div class="three-col" style="max-width:700px;margin:0 auto;">
+        <div class="card" style="text-align:center;">
+          <span class="card-icon">⚡</span>
+          <h3>Shared Workflows</h3>
+          <p><span class="inline-code">github-shared-workflows</span></p>
+        </div>
+        <div class="card" style="text-align:center;">
+          <span class="card-icon">📊</span>
+          <h3>Live Dashboard</h3>
+          <p>GitHub Pages</p>
+        </div>
+        <div class="card" style="text-align:center;">
+          <span class="card-icon">📖</span>
+          <h3>Documentation</h3>
+          <p>Architecture · Usage</p>
+        </div>
+      </div>
+    </div>
+    <div class="meta" style="margin-top:32px;">
+      <p>All repositories are public — inspect, fork, and reuse.</p>
+      <p style="margin-top:8px;color:var(--gold);font-size:1rem;">
+        <strong>We're ready to build, optimize, or take on any CI/CD task in GitHub Actions.</strong>
+      </p>
+    </div>
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<!-- ─── Navigation ─── -->
+<nav class="nav">
+  <button onclick="prev()" title="Previous (←)">◀</button>
+  <div class="dots" id="dots"></div>
+  <span class="slide-counter" id="counter">1 / 14</span>
+  <button onclick="next()" title="Next (→)">▶</button>
+</nav>
+
+<script>
+'use strict';
+const slides = document.querySelectorAll('.slide');
+const dotsEl = document.getElementById('dots');
+const counterEl = document.getElementById('counter');
+let current = 0;
+
+// Build dots — mark Part 2 dots differently
+slides.forEach((s, i) => {
+  const d = document.createElement('span');
+  const part = s.getAttribute('data-part');
+  d.className = 'dot' + (i === 0 ? ' active' : '') + (part === '2' || part === 'divider' ? ' part2' : '');
+  d.onclick = () => goTo(i);
+  dotsEl.appendChild(d);
+});
+
+function goTo(n) {
+  if (n < 0 || n >= slides.length || n === current) return;
+  const prev = current;
+  slides[current].classList.remove('active');
+  slides[current].classList.add('exit-left');
+  current = n;
+  slides[current].classList.add('active');
+  setTimeout(() => slides[prev].classList.remove('exit-left'), 450);
+  updateUI();
+}
+function next() { goTo(current + 1); }
+function prev() { goTo(current - 1); }
+
+function updateUI() {
+  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+  counterEl.textContent = (current + 1) + ' / ' + slides.length;
+}
+
+// Keyboard
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+  if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+  if (e.key === 'End') { e.preventDefault(); goTo(slides.length - 1); }
+});
+
+// Touch
+let touchX = 0;
+document.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; });
+document.addEventListener('touchend', (e) => {
+  const dx = touchX - e.changedTouches[0].clientX;
+  if (Math.abs(dx) > 50) { dx > 0 ? next() : prev(); }
+});
+</script>
+
+</body>
+</html>
