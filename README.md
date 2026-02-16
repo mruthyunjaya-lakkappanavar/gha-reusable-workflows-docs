@@ -38,4 +38,4 @@ This site is hosted on **GitHub Pages**. The presentation is accessible at the r
 
 ## License
 
-MIT
+Apache 2.0
