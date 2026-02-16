@@ -20,12 +20,21 @@ Composite actions are lightweight, reusable step sequences that run within an ex
 
 ### What It Does
 
-```
-language = python?                    language = node?                    language = go?
-  │                                      │                                   │
-  ├→ actions/setup-python@v5              ├→ actions/setup-node@v4            ├→ actions/setup-go@v5
-  ├→ pip cache enabled                    ├→ npm cache enabled                ├→ Go module cache
-  └→ Verify: python --version            └→ Verify: node --version           └→ Verify: go version
+```mermaid
+flowchart TD
+    IN["setup-toolchain<br/><em>language + version</em>"]
+    IN -->|python| P1["actions/setup-python@v5"]
+    IN -->|node| N1["actions/setup-node@v4"]
+    IN -->|go| G1["actions/setup-go@v5"]
+
+    P1 --> P2["pip cache enabled<br/>python --version ✓"]
+    N1 --> N2["npm cache enabled<br/>node --version ✓"]
+    G1 --> G2["Go module cache<br/>go version ✓"]
+
+    style IN fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
+    style P2 fill:#111b2e,stroke:#34d399,color:#34d399
+    style N2 fill:#111b2e,stroke:#34d399,color:#34d399
+    style G2 fill:#111b2e,stroke:#34d399,color:#34d399
 ```
 
 ### Implementation

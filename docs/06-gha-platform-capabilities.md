@@ -1,6 +1,6 @@
-# GHA Platform Capabilities & Readiness
+# GHA Platform Capabilities
 
-This document showcases the breadth of GitHub Actions features we've exercised in this POC — demonstrating hands-on coverage across the platform.
+This document maps every GitHub Actions feature exercised in this project — demonstrating deep, hands-on coverage across the platform.
 
 ---
 
@@ -90,11 +90,9 @@ These features are available in GitHub Actions **natively** — no plugins, no e
 
 ---
 
-## Adoption
+## Onboarding Example
 
-### For New Projects
-
-Adopt the reusable workflows from day one:
+A new repository gets full CI/CD by adding a single workflow file:
 
 - Create `.github/workflows/ci.yml` (~15 lines)
 - Add release workflow if needed (~15 lines)

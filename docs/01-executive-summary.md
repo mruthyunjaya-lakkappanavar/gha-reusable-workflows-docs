@@ -1,8 +1,8 @@
 # Executive Summary
 
-## What We Built
+## Overview
 
-As a **proof of concept**, we built a **centralized CI/CD platform** using GitHub Actions — consisting of reusable workflows and composite actions that any repository can adopt with minimal configuration (~15 lines of YAML). This POC demonstrates practical, hands-on expertise in designing and implementing production-grade GHA pipelines.
+This project is a **fully working centralized CI/CD platform** built on GitHub Actions — reusable workflows and composite actions that any repository can adopt with minimal configuration (~15 lines of YAML). It demonstrates practical, hands-on expertise in designing and implementing production-grade GHA pipelines.
 
 ## Components at a Glance
 
@@ -16,20 +16,21 @@ As a **proof of concept**, we built a **centralized CI/CD platform** using GitHu
 
 ## What Reusable Workflows Enable
 
-Reusable workflows (`workflow_call`) let a central repository own CI/CD logic. Consumer repos call these workflows with just inputs and secrets — exactly like calling a function from a shared library. This POC demonstrates how that works across three languages and four repositories.
+Reusable workflows (`workflow_call`) let a central repository own CI/CD logic. Consumer repos call these workflows with just inputs and secrets — exactly like calling a function from a shared library. This project demonstrates how that works across three languages and four repositories.
 
-```
-┌────────────────────────────┐
-│  github-shared-workflows   │  ← Central repo: owns all CI/CD logic
-│  (5 workflows, 2 actions)  │
-└──────────┬─────────────────┘
-           │ workflow_call
-     ┌─────┼──────┬──────┐
-     ▼     ▼      ▼      ▼
-   Python  Node   Go    Node
-   App     App    App   Library
-   (~15    (~15   (~15  (~15
-   lines)  lines) lines) lines)
+```mermaid
+graph TD
+    HUB["<strong>github-shared-workflows</strong><br/>5 workflows · 2 actions"]
+    HUB -->|workflow_call| A["sample-app-python<br/><em>~15 lines</em>"]
+    HUB -->|workflow_call| B["sample-app-node<br/><em>~15 lines</em>"]
+    HUB -->|workflow_call| C["sample-app-go<br/><em>~15 lines</em>"]
+    HUB -->|workflow_call| D["sample-lib-node<br/><em>~15 lines</em>"]
+
+    style HUB fill:#1a2744,stroke:#e5b83a,stroke-width:2px,color:#f0f4f8
+    style A fill:#111b2e,stroke:#60a5fa,color:#c9d1d9
+    style B fill:#111b2e,stroke:#34d399,color:#c9d1d9
+    style C fill:#111b2e,stroke:#fb923c,color:#c9d1d9
+    style D fill:#111b2e,stroke:#a78bfa,color:#c9d1d9
 ```
 
 ### Capabilities Demonstrated
@@ -61,7 +62,7 @@ Reusable workflows (`workflow_call`) let a central repository own CI/CD logic. C
 | `reusable-publish.yml` | Build → Staging (@next) → Production (@latest) with approval gates | sample-lib-node |
 | `reusable-release.yml` | Semantic versioning, changelog, GitHub Releases | sample-app-python, sample-app-node |
 
-## What This Demonstrates
+## Expertise Demonstrated
 
 1. **Reusable workflow design** — parameterized workflows with typed inputs, secrets passthrough, and conditional steps
 2. **Multi-language support** — single workflow handles Python, Node.js, and Go via conditional logic

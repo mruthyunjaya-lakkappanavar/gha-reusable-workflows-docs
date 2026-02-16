@@ -30,14 +30,19 @@ This document provides a detailed reference for each reusable workflow in the `g
 
 ### Jobs
 
-```
-┌─────────┐   ┌─────────┐   ┌──────────┐   ┌─────────┐
-│  Lint   │   │  Test   │   │ Security │   │ Summary │
-│         │   │         │   │  Scan    │   │         │
-│ flake8  │   │ pytest  │   │  Trivy   │   │ PR      │
-│ ESLint  │   │ jest    │   │  SAST    │   │ comment │
-│ golangci│   │ go test │   │  audit   │   │         │
-└─────────┘   └─────────┘   └──────────┘   └─────────┘
+```mermaid
+flowchart LR
+    L["**Lint**<br/>flake8 · ESLint<br/>golangci-lint"]
+    T["**Test**<br/>pytest · jest<br/>go test"]
+    S["**Security Scan**<br/>Trivy · SAST<br/>audit"]
+    R["**Summary**<br/>PR comment"]
+
+    L & T & S --> R
+
+    style L fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
+    style T fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
+    style S fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
+    style R fill:#111b2e,stroke:#34d399,color:#34d399
 ```
 
 ### Usage Example
@@ -150,14 +155,19 @@ jobs:
 
 ### Job Graph
 
-```
-  sanity ──────────┐
-  (PostgreSQL +    │
-   Redis)          ├──→ docker-build ──→ deploy-staging ──→ deploy-production
-  regression ──────┤    (BuildX +         (env: staging)     (env: production)
-  (version matrix) │     GHA cache)                          (manual approval)
-  performance ─────┘
-  (load tests)
+```mermaid
+flowchart LR
+    A["Sanity<br/><em>PG + Redis</em>"]
+    B["Regression<br/><em>version matrix</em>"]
+    C["Performance<br/><em>load tests</em>"]
+    D["Docker build<br/><em>BuildX + cache</em>"]
+    E["Deploy staging"]
+    F["Deploy production<br/><em>🔐 approval</em>"]
+
+    A & B & C --> D --> E --> F
+
+    style D fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
+    style F fill:#111b2e,stroke:#34d399,color:#34d399
 ```
 
 ### Service Containers
@@ -220,13 +230,16 @@ jobs:
 
 ### Pipeline
 
-```
-Build Package ──→ Publish Staging ──→ Publish Production
-(extract version,   (env: staging,     (env: production,
- build, upload      @next tag,          @latest tag,
- artifact)          test PyPI)          real PyPI,
-                                        manual approval,
-                                        GitHub Release)
+```mermaid
+flowchart LR
+    A["Build Package<br/><em>version · build · artifact</em>"]
+    B["Publish Staging<br/><em>@next · test PyPI</em>"]
+    C["Publish Production<br/><em>@latest · PyPI · 🔐 approval</em>"]
+
+    A --> B --> C
+
+    style A fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
+    style C fill:#111b2e,stroke:#34d399,color:#34d399
 ```
 
 ### Permissions

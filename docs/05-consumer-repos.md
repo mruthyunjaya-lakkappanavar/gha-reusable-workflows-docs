@@ -1,6 +1,6 @@
 # Consumer Repos & Real-World Usage
 
-This section documents each consumer repository that integrates with the shared workflows, demonstrating real-world usage across different languages, frameworks, and CI/CD patterns.
+Each of these repositories integrates with the shared workflows, demonstrating real-world usage across different languages, frameworks, and CI/CD patterns.
 
 ---
 
@@ -275,7 +275,7 @@ jobs:
 
 ---
 
-## Consumer Adoption Summary
+## Onboarding a New Repository
 
 Adding shared workflows to a new repository takes **5 minutes**:
 

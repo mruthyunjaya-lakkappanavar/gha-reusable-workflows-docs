@@ -1,6 +1,6 @@
 # Advanced GHA Patterns
 
-This document covers the advanced GitHub Actions patterns demonstrated in our reusable workflows. Each pattern is a skill area that shows depth of GHA expertise.
+Each pattern below is implemented in the reusable workflows and demonstrates depth of GitHub Actions expertise.
 
 ---
 
@@ -8,7 +8,7 @@ This document covers the advanced GitHub Actions patterns demonstrated in our re
 
 **Pattern:** Accept matrix axes as JSON-string inputs, expand at runtime with `fromJSON()`.
 
-**Why it matters:** Consumers control the matrix dimensions without modifying the shared workflow. This is the GHA equivalent of Jenkins' `matrix { axes {} }` but more flexible.
+**Why it matters:** Consumers control the matrix dimensions without modifying the shared workflow. This gives consumers full control over test dimensions without modifying the shared workflow.
 
 ```yaml
 # In the reusable workflow:
@@ -64,7 +64,7 @@ The application connects via `DATABASE_URL=postgresql://testuser:testpass@localh
 
 **Pattern:** Use GitHub Environments with required reviewers for staged deployments.
 
-**Why it matters:** Replaces Jenkins' `input "Deploy to prod?"` with a UI-based approval system that includes deployment history, environment-specific secrets, and wait timers.
+**Why it matters:** Provides a UI-based approval system with deployment history, environment-specific secrets, and wait timers — all native to GHA.
 
 ```yaml
 jobs:
@@ -87,7 +87,7 @@ jobs:
 
 **Pattern:** Prevent redundant builds and auto-cancel superseded runs.
 
-**Why it matters:** No plugin required (vs Jenkins' Lockable Resources or throttle plugins). Built into GHA at the workflow level.
+**Why it matters:** Built into GHA at the workflow level — no plugins or external infrastructure required.
 
 ```yaml
 concurrency:
@@ -123,7 +123,7 @@ on:
 
 **Pattern:** Use `workflow_dispatch.inputs` with typed controls (choice, boolean, string).
 
-**Why it matters:** Equivalent to Jenkins' `parameters {}` block but with UI dropdown/checkbox support.
+**Why it matters:** Provides UI-driven dropdown and checkbox controls for manual workflow runs.
 
 ```yaml
 on:
@@ -249,4 +249,4 @@ updates:
       interval: "weekly"
 ```
 
-**Why it matters:** No Jenkins equivalent. Dependabot automatically creates PRs to update dependencies, which then trigger the CI workflow — creating a fully automated update-test-merge loop.
+**Why it matters:** Dependabot automatically creates PRs to update dependencies, which then trigger the CI workflow — creating a fully automated update-test-merge loop.

@@ -6,54 +6,40 @@ The platform follows a **hub-and-spoke** architecture. The central `github-share
 
 ## Architecture Diagram
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                    github-shared-workflows (Hub)                        │
-│                                                                         │
-│   .github/workflows/                    actions/                        │
-│   ┌────────────────────────┐            ┌─────────────────────┐        │
-│   │ reusable-ci.yml        │            │ setup-toolchain/    │        │
-│   │  Lint → Test → Scan    │            │  Python/Node/Go     │        │
-│   ├────────────────────────┤            │  + dep caching      │        │
-│   │ reusable-matrix-ci.yml │            ├─────────────────────┤        │
-│   │  Version × OS × Tests  │            │ slack-notify/       │        │
-│   ├────────────────────────┤            │  Color-coded msgs   │        │
-│   │ reusable-integration-ci│            └─────────────────────┘        │
-│   │  Services + Docker +   │                                            │
-│   │  Staged Deploy         │            dashboard/                      │
-│   ├────────────────────────┤            ┌─────────────────────┐        │
-│   │ reusable-publish.yml   │            │ GitHub Pages        │        │
-│   │  Staging → Production  │            │ Cross-repo status   │        │
-│   ├────────────────────────┤            │ Health metrics      │        │
-│   │ reusable-release.yml   │            │ Activity timeline   │        │
-│   │  Semver + Changelog    │            └─────────────────────┘        │
-│   └────────────────────────┘                                            │
-└───────────┬───────────────┬────────────────┬───────────────┬────────────┘
-            │               │                │               │
-     workflow_call    workflow_call    workflow_call    workflow_call
-            │               │                │               │
-  ┌─────────▼──────┐ ┌─────▼────────┐ ┌─────▼──────┐ ┌─────▼──────────┐
-  │ sample-app-    │ │ sample-app-  │ │ sample-app-│ │ sample-lib-    │
-  │ python         │ │ node         │ │ go         │ │ node           │
-  │                │ │              │ │            │ │                │
-  │ FastAPI +      │ │ Express + TS │ │ Go + Mux   │ │ HTTP Client    │
-  │ SQLAlchemy     │ │ Jest         │ │ go test    │ │ Library        │
-  │ PostgreSQL     │ │ ESLint       │ │ golangci   │ │ Zero deps      │
-  │ Docker         │ │              │ │            │ │                │
-  │                │ │ Uses:        │ │ Uses:      │ │ Uses:          │
-  │ Uses:          │ │ • CI         │ │ • CI       │ │ • Matrix CI    │
-  │ • CI           │ │ • Release    │ │ • Release  │ │ • Publish      │
-  │ • Integration  │ │              │ │            │ │ • Release      │
-  │ • Release      │ │              │ │            │ │                │
-  └────────────────┘ └──────────────┘ └────────────┘ └────────────────┘
-         │                  │                │               │
-         └──────────────────┴────────────────┴───────────────┘
-                                     │
-                              ┌──────▼──────┐
-                              │    Slack     │
-                              │  #builds    │
-                              │  #releases  │
-                              └─────────────┘
+```mermaid
+graph TB
+    subgraph HUB["github-shared-workflows (Hub)"]
+        direction TB
+        subgraph WF[".github/workflows/"]
+            W1["reusable-ci.yml<br/><em>Lint → Test → Scan</em>"]
+            W2["reusable-matrix-ci.yml<br/><em>Version × OS × Tests</em>"]
+            W3["reusable-integration-ci.yml<br/><em>Services + Docker + Deploy</em>"]
+            W4["reusable-publish.yml<br/><em>Staging → Production</em>"]
+            W5["reusable-release.yml<br/><em>Semver + Changelog</em>"]
+        end
+        subgraph ACT["actions/"]
+            A1["setup-toolchain/<br/><em>Python / Node / Go + caching</em>"]
+            A2["slack-notify/<br/><em>Color-coded messages</em>"]
+        end
+        DASH["dashboard/<br/><em>GitHub Pages · Cross-repo status</em>"]
+    end
+
+    HUB -->|workflow_call| P["<strong>sample-app-python</strong><br/>FastAPI · SQLAlchemy · Docker<br/><em>CI + Integration + Release</em>"]
+    HUB -->|workflow_call| N["<strong>sample-app-node</strong><br/>Express · Jest · ESLint<br/><em>CI + Release</em>"]
+    HUB -->|workflow_call| G["<strong>sample-app-go</strong><br/>Go · Mux · go test<br/><em>CI + Release</em>"]
+    HUB -->|workflow_call| L["<strong>sample-lib-node</strong><br/>HTTP Client Library<br/><em>Matrix CI + Publish + Release</em>"]
+
+    P & N & G & L --> S["Slack<br/>#builds · #releases"]
+
+    style HUB fill:#0e1729,stroke:#e5b83a,stroke-width:2px,color:#f0f4f8
+    style WF fill:#111b2e,stroke:#1c2d4a,color:#c9d1d9
+    style ACT fill:#111b2e,stroke:#1c2d4a,color:#c9d1d9
+    style DASH fill:#111b2e,stroke:#1c2d4a,color:#c9d1d9
+    style P fill:#111b2e,stroke:#60a5fa,color:#c9d1d9
+    style N fill:#111b2e,stroke:#34d399,color:#c9d1d9
+    style G fill:#111b2e,stroke:#fb923c,color:#c9d1d9
+    style L fill:#111b2e,stroke:#a78bfa,color:#c9d1d9
+    style S fill:#111b2e,stroke:#34d399,color:#34d399
 ```
 
 ## Repository Structure
@@ -97,10 +83,7 @@ We use **both**, each for its ideal purpose:
 
 ### 2. Public Repository
 
-The central repo is **public** because GitHub requires callers to have access to the workflow file. Options:
-- **Public** — any GitHub repo can call (chosen for maximum portability)
-- **Internal** — same GitHub Enterprise org only
-- **Private** — requires GitHub Enterprise (paid)
+The central repo is **public** because GitHub requires callers to have access to the workflow file. For enterprise use, **internal** (same org) or **private** (GitHub Enterprise) visibility would be used instead.
 
 ### 3. Zero-Dependency Dashboard
 
@@ -117,78 +100,84 @@ The dashboard uses **pre-generated static JSON** instead of live GitHub API call
 
 ### CI Pipeline Flow
 
-```
-Developer pushes code
-  └→ Consumer ci.yml triggers (on: push/pull_request)
-      └→ Calls reusable-ci.yml via workflow_call
-          ├→ setup-toolchain composite action
-          │   └→ Installs Python/Node/Go + configures dep cache
-          ├→ Install dependencies (pip install / npm ci)
-          ├→ Lint (flake8 / ESLint / golangci-lint)
-          ├→ Test (pytest / jest / go test)
-          ├→ Security scan (Trivy filesystem scan)
-          ├→ Upload test results as artifacts
-          └→ Slack notification (success/failure)
+```mermaid
+flowchart LR
+    A["Developer pushes code"] --> B["Consumer ci.yml triggers"]
+    B --> C["reusable-ci.yml"]
+    C --> D["setup-toolchain"]
+    D --> E["Install deps"]
+    E --> F["Lint"]
+    F --> G["Test"]
+    G --> H["Security Scan"]
+    H --> I["Upload artifacts"]
+    I --> J["Slack notify"]
+
+    style C fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
+    style J fill:#111b2e,stroke:#34d399,color:#34d399
 ```
 
 ### Release Flow
 
-```
-PR merged with conventional commit → main branch
-  └→ Consumer release.yml triggers
-      └→ Calls reusable-release.yml
-          ├→ Release Please analyzes commits
-          ├→ Creates/updates release PR (version bump + changelog)
-          └→ On release PR merge:
-              ├→ Creates GitHub Release with release notes
-              └→ Slack notification to #releases
+```mermaid
+flowchart LR
+    A["PR merged with conventional commit"] --> B["release.yml triggers"]
+    B --> C["reusable-release.yml"]
+    C --> D["Release Please analyzes commits"]
+    D --> E["Creates/updates release PR"]
+    E --> F["On merge: GitHub Release"]
+    F --> G["Slack → #releases"]
+
+    style C fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
+    style G fill:#111b2e,stroke:#34d399,color:#34d399
 ```
 
 ### Matrix CI Flow
 
-```
-Developer pushes code
-  └→ Consumer ci.yml triggers
-      └→ Calls reusable-matrix-ci.yml
-          ├→ Lint job (single runner)
-          ├→ Matrix test job expands via fromJSON():
-          │   ┌─ Node 18 × ubuntu  × unit
-          │   ├─ Node 18 × macos   × unit
-          │   ├─ Node 20 × ubuntu  × integration
-          │   ├─ ... (N × M × K parallel jobs)
-          │   └─ Node 22 × windows × integration
-          ├→ Security scan job
-          ├→ Build verification job (optional)
-          └→ Summary job aggregates results → PR comment
+```mermaid
+flowchart TB
+    A["Developer pushes code"] --> B["reusable-matrix-ci.yml"]
+    B --> C["Lint job"]
+    B --> D["Matrix test job via fromJSON"]
+    B --> E["Security scan"]
+    B --> F["Build verification"]
+    D --> D1["Node 18 × ubuntu × unit"]
+    D --> D2["Node 18 × macOS × unit"]
+    D --> D3["Node 20 × ubuntu × integration"]
+    D --> D4["… N × M × K parallel jobs"]
+    D --> D5["Node 22 × windows × integration"]
+    C & D & E & F --> G["Summary → PR comment"]
+
+    style B fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
+    style D fill:#111b2e,stroke:#a78bfa,color:#c9d1d9
 ```
 
 ### Integration CI Flow
 
-```
-Developer pushes code (sample-app-python)
-  └→ Consumer ci.yml triggers
-      └→ Calls reusable-integration-ci.yml
-          ├→ Parallel test stages:
-          │   ├─ Sanity tests (PostgreSQL + Redis service containers)
-          │   ├─ Regression tests (version matrix × PostgreSQL)
-          │   └─ Performance tests (throughput + response time)
-          ├→ Docker build job
-          │   └→ docker/build-push-action → push to GHCR
-          ├→ Deploy staging (environment: staging)
-          └→ Deploy production (environment: production, manual approval)
+```mermaid
+flowchart LR
+    A["Developer pushes code"] --> B["reusable-integration-ci.yml"]
+    B --> C["Sanity tests<br/><em>PG + Redis</em>"]
+    B --> D["Regression tests<br/><em>version matrix</em>"]
+    B --> E["Performance tests"]
+    C & D & E --> F["Docker build<br/><em>BuildX → GHCR</em>"]
+    F --> G["Deploy staging"]
+    G --> H["Deploy production<br/><em>🔒 manual approval</em>"]
+
+    style B fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
+    style H fill:#111b2e,stroke:#34d399,color:#34d399
 ```
 
 ### Publish Flow
 
-```
-Manual dispatch or release tag
-  └→ Consumer publish.yml triggers
-      └→ Calls reusable-publish.yml
-          ├→ Build package (npm pack / python -m build)
-          ├→ Publish staging (@next tag / test.pypi.org)
-          │   └→ Environment: staging
-          └→ Publish production (@latest tag / pypi.org)
-              └→ Environment: production (manual approval required)
+```mermaid
+flowchart LR
+    A["Manual dispatch or release tag"] --> B["reusable-publish.yml"]
+    B --> C["Build package"]
+    C --> D["Publish staging<br/><em>@next tag</em>"]
+    D --> E["Publish production<br/><em>@latest tag · 🔒 approval</em>"]
+
+    style B fill:#1a2744,stroke:#e5b83a,color:#f0f4f8
+    style E fill:#111b2e,stroke:#34d399,color:#34d399
 ```
 
 ## Security Considerations

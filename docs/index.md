@@ -1,18 +1,16 @@
-# GitHub Actions — Reusable Workflows POC
+# GitHub Actions — Reusable Workflows
 
 ## Documentation
 
-This documentation covers the **Proof of Concept** we built to demonstrate hands-on expertise in GitHub Actions — specifically, centralized CI/CD using reusable workflows and composite actions.
-
-The documentation is structured in two parts so you can get the high-level picture first and dive deeper only when needed.
+This documentation covers a **fully working CI/CD platform** built on GitHub Actions — centralized reusable workflows and composite actions, demonstrated across four repositories and three languages.
 
 ---
 
 ### Part 1 — Overview
 
-Start here for the big picture: what we built, what it demonstrates, and why it matters.
+Architecture, design decisions, and component overview.
 
-1. **[Executive Summary](01-executive-summary.md)** — What the POC is, key outcomes, and capabilities at a glance
+1. **[Executive Summary](01-executive-summary.md)** — Key outcomes and capabilities at a glance
 2. **[Architecture](02-architecture.md)** — Hub-and-spoke design and component relationships
 3. **[Reusable Workflows](03-reusable-workflows.md)** — The five workflows and what each one does
 4. **[Composite Actions](04-composite-actions.md)** — Toolchain setup and Slack notification actions
@@ -20,8 +18,8 @@ Start here for the big picture: what we built, what it demonstrates, and why it 
 
 ### Part 2 — Deep Dive
 
-Detailed technical reference for those who want to explore further.
+Technical deep dives and implementation patterns.
 
-6. **[GHA Platform Capabilities](06-gha-platform-capabilities.md)** — Full feature coverage demonstrated in this POC
+6. **[GHA Platform Capabilities](06-gha-platform-capabilities.md)** — Full feature coverage demonstrated in this project
 7. **[Live Dashboard](07-dashboard.md)** — Cross-repo CI/CD visibility dashboard
 8. **[Advanced GHA Patterns](08-advanced-patterns.md)** — Dynamic matrix, service containers, environment gates, and more

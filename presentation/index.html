@@ -161,7 +161,7 @@ ul.feat li::before{content:"›";position:absolute;left:0;color:var(--gold);font
   <div class="content">
     <svg width="72" height="72" viewBox="0 0 72 72" style="margin-bottom:20px"><circle cx="36" cy="36" r="34" fill="none" stroke="var(--gold)" stroke-width="2.5"/><path d="M24 36l8 8 16-16" stroke="var(--gold)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <h1>GitHub Actions<br><span class="gold">Reusable Workflows</span></h1>
-    <p class="subtitle">Proof of Concept — Hands-on CI/CD Platform Competency</p>
+    <p class="subtitle">Demonstrating Production-Ready CI/CD Platform Expertise</p>
     <div style="margin-top:24px;display:flex;gap:8px;justify-content:center">
       <span class="badge b-gold">POC Complete</span>
       <span class="badge b-green">Production-Ready Patterns</span>
@@ -173,7 +173,6 @@ ul.feat li::before{content:"›";position:absolute;left:0;color:var(--gold);font
      SLIDE 2 — POC Scope
      ══════════════════════════════════════════ -->
 <div class="slide" data-slide="1">
-  <span class="part">Part 1</span>
   <div class="content">
     <h2>POC Scope &amp; Objectives</h2>
     <p class="section-desc">A hands-on proof of concept to demonstrate GitHub Actions capabilities — reusable workflows, composite actions, and platform patterns across multiple languages.</p>
@@ -203,7 +202,6 @@ ul.feat li::before{content:"›";position:absolute;left:0;color:var(--gold);font
      SLIDE 3 — Hub & Spoke (SVG)
      ══════════════════════════════════════════ -->
 <div class="slide" data-slide="2">
-  <span class="part">Part 1</span>
   <div class="content">
     <h2>The Full Picture</h2>
     <p class="section-desc">One central repository owns all CI/CD logic. Four consumer repos adopt it via <code>workflow_call</code>.</p>
@@ -319,7 +317,6 @@ ul.feat li::before{content:"›";position:absolute;left:0;color:var(--gold);font
      SLIDE 4 — Consumer Repos & Demo Links
      ══════════════════════════════════════════ -->
 <div class="slide" data-slide="3">
-  <span class="part">Part 1</span>
   <div class="content">
     <h2>Consumer Repos</h2>
     <p class="section-desc">Each consumer calls shared workflows with <strong class="gold">~15 lines of YAML</strong>. Click to navigate for live demo.</p>
@@ -388,7 +385,6 @@ ul.feat li::before{content:"›";position:absolute;left:0;color:var(--gold);font
      SLIDE 5 — Key Capabilities
      ══════════════════════════════════════════ -->
 <div class="slide" data-slide="4">
-  <span class="part">Part 1</span>
   <div class="content">
     <h2>Key Capabilities</h2>
     <p class="section-desc">Every capability was <strong class="gold">built and validated</strong> in this POC.</p>
@@ -447,7 +443,6 @@ ul.feat li::before{content:"›";position:absolute;left:0;color:var(--gold);font
      SLIDE 6 — Pipeline Flows
      ══════════════════════════════════════════ -->
 <div class="slide" data-slide="5">
-  <span class="part">Part 1</span>
   <div class="content">
     <h2>Workflow Pipeline Flows</h2>
     <p class="section-desc">Five reusable workflows — each with Slack notifications. Click to view source.</p>
@@ -555,7 +550,6 @@ ul.feat li::before{content:"›";position:absolute;left:0;color:var(--gold);font
      SLIDE 7 — POC Achievements
      ══════════════════════════════════════════ -->
 <div class="slide" data-slide="6">
-  <span class="part">Part 1</span>
   <div class="content">
     <h2>POC Achievements</h2>
 
@@ -585,7 +579,6 @@ ul.feat li::before{content:"›";position:absolute;left:0;color:var(--gold);font
      SLIDE 8 — How Repos Adopt
      ══════════════════════════════════════════ -->
 <div class="slide" data-slide="7">
-  <span class="part">Part 1</span>
   <div class="content">
     <h2>How Repos Adopt Shared Workflows</h2>
 
@@ -638,7 +631,6 @@ ul.feat li::before{content:"›";position:absolute;left:0;color:var(--gold);font
      SLIDE 9 — What This Demonstrates
      ══════════════════════════════════════════ -->
 <div class="slide" data-slide="8">
-  <span class="part">Part 1</span>
   <div class="content">
     <h2>What This POC Demonstrates</h2>
 
@@ -676,211 +668,9 @@ ul.feat li::before{content:"›";position:absolute;left:0;color:var(--gold);font
 </div>
 
 <!-- ══════════════════════════════════════════
-     DIVIDER
+     SLIDE 10 — Closing
      ══════════════════════════════════════════ -->
-<div class="slide divider" data-slide="9">
-  <div class="content">
-    <p style="font-size:.78rem;text-transform:uppercase;letter-spacing:.14em;color:var(--text-dim);margin-bottom:10px">Part 2</p>
-    <h1>Technical Deep Dive</h1>
-    <div class="divider-line"></div>
-    <p class="subtitle" style="max-width:520px;margin:0 auto">Architecture, workflow details, and advanced patterns.</p>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     SLIDE 11 — Architecture (SVG)
-     ══════════════════════════════════════════ -->
-<div class="slide" data-slide="10">
-  <span class="part">Part 2</span>
-  <div class="content">
-    <h2>Architecture</h2>
-    <p class="section-desc">Hub & spoke with composite actions, Slack alerts, and a live dashboard.</p>
-
-    <svg class="diagram-svg" viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg">
-      <!-- Hub box -->
-      <rect class="hub-rect" x="150" y="10" width="500" height="100"/>
-      <text class="label-white" x="400" y="40" font-size="14" text-anchor="middle">github-shared-workflows</text>
-      <!-- Workflow row -->
-      <text class="label-gold" x="185" y="65" font-size="10">reusable-ci</text>
-      <text class="label-gold" x="285" y="65" font-size="10">matrix-ci</text>
-      <text class="label-gold" x="375" y="65" font-size="10">integration-ci</text>
-      <text class="label-gold" x="485" y="65" font-size="10">publish</text>
-      <text class="label-gold" x="555" y="65" font-size="10">release</text>
-      <!-- Actions row -->
-      <text x="185" y="88" font-size="10" fill="var(--green)" font-weight="500">setup-toolchain</text>
-      <text x="315" y="88" font-size="10" fill="var(--green)" font-weight="500">slack-notify</text>
-      <text x="435" y="88" font-size="10" fill="var(--text-dim)">+ dashboard (GitHub Pages)</text>
-
-      <!-- Connector trunk -->
-      <line class="connector" x1="400" y1="110" x2="400" y2="155"/>
-      <!-- Horizontal -->
-      <line class="connector" x1="100" y1="155" x2="700" y2="155"/>
-      <!-- Drops + arrows -->
-      <line class="connector" x1="100" y1="155" x2="100" y2="185"/>
-      <line class="connector" x1="300" y1="155" x2="300" y2="185"/>
-      <line class="connector" x1="500" y1="155" x2="500" y2="185"/>
-      <line class="connector" x1="700" y1="155" x2="700" y2="185"/>
-      <polygon class="connector-dot" points="100,190 95,182 105,182"/>
-      <polygon class="connector-dot" points="300,190 295,182 305,182"/>
-      <polygon class="connector-dot" points="500,190 495,182 505,182"/>
-      <polygon class="connector-dot" points="700,190 695,182 705,182"/>
-
-      <!-- Consumer boxes -->
-      <rect class="spoke-rect" x="30" y="195" width="140" height="80"/>
-      <text class="label-white" x="100" y="220" font-size="11" text-anchor="middle">Python App</text>
-      <text class="label-dim" x="100" y="240" text-anchor="middle">CI + Integration + Rel</text>
-      <text x="100" y="260" font-size="10" text-anchor="middle" fill="var(--green)">Slack ✓</text>
-
-      <rect class="spoke-rect" x="230" y="195" width="140" height="80"/>
-      <text class="label-white" x="300" y="220" font-size="11" text-anchor="middle">Node App</text>
-      <text class="label-dim" x="300" y="240" text-anchor="middle">CI + Release</text>
-      <text x="300" y="260" font-size="10" text-anchor="middle" fill="var(--green)">Slack ✓</text>
-
-      <rect class="spoke-rect" x="430" y="195" width="140" height="80"/>
-      <text class="label-white" x="500" y="220" font-size="11" text-anchor="middle">Go App</text>
-      <text class="label-dim" x="500" y="240" text-anchor="middle">CI + Release</text>
-      <text x="500" y="260" font-size="10" text-anchor="middle" fill="var(--green)">Slack ✓</text>
-
-      <rect class="spoke-rect" x="630" y="195" width="140" height="80"/>
-      <text class="label-white" x="700" y="220" font-size="11" text-anchor="middle">Node Library</text>
-      <text class="label-dim" x="700" y="240" text-anchor="middle">Matrix + Pub + Rel</text>
-      <text x="700" y="260" font-size="10" text-anchor="middle" fill="var(--green)">Slack ✓</text>
-    </svg>
-
-    <div style="display:flex;gap:10px;margin-top:16px;justify-content:center">
-      <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/tree/main/.github/workflows" target="_blank">Hub Workflows</a>
-      <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/tree/main/actions" target="_blank">Composite Actions</a>
-      <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/actions" target="_blank">Actions Tab</a>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     SLIDE 12 — Integration CI Deep Dive
-     ══════════════════════════════════════════ -->
-<div class="slide" data-slide="11">
-  <span class="part">Part 2</span>
-  <div class="content">
-    <h2>Integration CI — Deep Dive</h2>
-    <p class="section-desc">sample-app-python: multi-stage with database services, Docker build, staged deployment.</p>
-
-    <div class="flow" style="margin-bottom:24px;justify-content:center">
-      <div class="flow-step"><strong>Sanity</strong><br><small style="color:var(--text-dim)">PG + Redis</small></div>
-      <span class="flow-arr">→</span>
-      <div class="flow-step"><strong>Regression</strong><br><small style="color:var(--text-dim)">3 versions</small></div>
-      <span class="flow-arr">→</span>
-      <div class="flow-step"><strong>Perf</strong></div>
-      <span class="flow-arr">→</span>
-      <div class="flow-step"><strong>Docker</strong></div>
-      <span class="flow-arr">→</span>
-      <div class="flow-step" style="border-color:var(--gold)"><strong>Staging</strong></div>
-      <span class="flow-arr">→</span>
-      <div class="flow-step" style="border-color:var(--green)"><strong>Prod</strong> <small style="color:var(--green)">🔒</small></div>
-      <span class="flow-arr">→</span>
-      <div class="flow-step flow-slack"><strong>Slack</strong></div>
-    </div>
-
-    <div class="grid-2">
-      <div class="card">
-        <h3>Service Containers</h3>
-        <pre><span style="color:var(--gold)">services:</span>
-  <span style="color:var(--green)">postgres:</span>
-    image: postgres:16
-    ports: ["5432:5432"]
-    options: --health-cmd pg_isready
-  <span style="color:var(--green)">redis:</span>
-    image: redis:7-alpine
-    ports: ["6379:6379"]</pre>
-      </div>
-      <div class="card">
-        <h3>Docker Build + Cache</h3>
-        <pre><span style="color:var(--gold)">- uses:</span> docker/build-push-action@v5
-  <span style="color:var(--gold)">with:</span>
-    push: true
-    tags: ghcr.io/org/app:${{ sha }}
-    cache-from: type=gha
-    cache-to: type=gha,mode=max</pre>
-      </div>
-    </div>
-
-    <div style="margin-top:14px;display:flex;gap:8px;justify-content:center">
-      <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/blob/main/.github/workflows/reusable-integration-ci.yml" target="_blank">Workflow Source</a>
-      <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-python/actions" target="_blank">Python Actions</a>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     SLIDE 13 — Matrix + Publish
-     ══════════════════════════════════════════ -->
-<div class="slide" data-slide="12">
-  <span class="part">Part 2</span>
-  <div class="content">
-    <h2>Matrix CI + Package Publishing</h2>
-
-    <div class="grid-2">
-      <div>
-        <h3>Dynamic Matrix — <span class="gold">18 Parallel Jobs</span></h3>
-        <p style="margin-bottom:16px">Consumer passes axes as JSON; workflow expands via <code>fromJSON()</code>.</p>
-        <table style="font-size:.84rem;margin-bottom:16px">
-          <thead><tr><th>Axis</th><th>Values</th></tr></thead>
-          <tbody>
-            <tr><td style="color:var(--white)">Node.js</td><td>18, 20, 22</td></tr>
-            <tr><td style="color:var(--white)">OS</td><td>Ubuntu, macOS, Windows</td></tr>
-            <tr><td style="color:var(--white)">Test Type</td><td>Unit, Integration</td></tr>
-          </tbody>
-        </table>
-        <pre style="font-size:.72rem"><span style="color:var(--gold)">with:</span>
-  language_versions: '["18","20","22"]'
-  os_matrix: '["ubuntu-latest",
-               "macos-latest",
-               "windows-latest"]'
-  test_types: '["unit","integration"]'</pre>
-      </div>
-      <div>
-        <h3>Staged Package Publishing</h3>
-        <p style="margin-bottom:16px">Two-stage publish with approval gate + Slack notification.</p>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <div class="flow-step" style="width:100%"><strong>Build &amp; Test</strong></div>
-          <div style="text-align:center"><span class="flow-arr">↓</span></div>
-          <div class="flow-step" style="width:100%;border-color:var(--gold)"><strong>Staging</strong> — <code>npm publish --tag next</code></div>
-          <div style="text-align:center"><span class="flow-arr">↓ <small style="color:var(--text-dim)">🔒 approval</small></span></div>
-          <div class="flow-step" style="width:100%;border-color:var(--green)"><strong>Production</strong> — <code>npm publish --tag latest</code></div>
-          <div style="text-align:center"><span class="flow-arr">↓</span></div>
-          <div class="flow-step flow-slack" style="width:100%"><strong>Slack</strong> — release notification</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     SLIDE 14 — Patterns Demonstrated
-     ══════════════════════════════════════════ -->
-<div class="slide" data-slide="13">
-  <span class="part">Part 2</span>
-  <div class="content">
-    <h2>GHA Patterns Demonstrated</h2>
-    <p class="section-desc">Each pattern was implemented and validated in this POC.</p>
-
-    <div class="grid-3">
-      <div class="card card-sm card-accent"><h3>Dynamic Matrix</h3><p><code>fromJSON()</code> expands axes from runtime inputs.</p></div>
-      <div class="card card-sm card-accent"><h3>Service Containers</h3><p>PostgreSQL + Redis as native job services with health checks.</p></div>
-      <div class="card card-sm card-accent"><h3>Environment Gates</h3><p>Approval workflows + deployment protection rules.</p></div>
-      <div class="card card-sm card-accent"><h3>Docker BuildX</h3><p>GHA-backed layer cache for fast, reproducible builds.</p></div>
-      <div class="card card-sm card-accent"><h3>Concurrency Controls</h3><p>Auto-cancel redundant runs; deploy group locks.</p></div>
-      <div class="card card-sm card-accent"><h3>Slack Notifications</h3><p>Color-coded alerts: success, failure, and release.</p></div>
-      <div class="card card-sm card-accent"><h3>Job Summaries</h3><p>Rich Markdown reports in the Actions UI.</p></div>
-      <div class="card card-sm card-accent"><h3>Artifact Passing</h3><p>Build once, deploy across jobs via upload/download.</p></div>
-      <div class="card card-sm card-accent"><h3>Path-Based Triggers</h3><p>Skip CI for docs-only changes with <code>on.push.paths</code>.</p></div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     SLIDE 15 — Closing
-     ══════════════════════════════════════════ -->
-<div class="slide title-slide" data-slide="14">
+<div class="slide title-slide" data-slide="9">
   <div class="content">
     <svg width="56" height="56" viewBox="0 0 56 56" style="margin-bottom:16px"><circle cx="28" cy="28" r="26" fill="none" stroke="var(--gold)" stroke-width="2"/><path d="M20 28h16M28 20v16" stroke="var(--gold)" stroke-width="2.5" stroke-linecap="round"/></svg>
     <h1>Explore the <span class="gold">Code &amp; Docs</span></h1>
@@ -907,8 +697,11 @@ ul.feat li::before{content:"›";position:absolute;left:0;color:var(--gold);font
       <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-lib-node" target="_blank">Node Library</a>
     </div>
 
-    <p style="margin-top:28px;color:var(--gold);font-size:1rem;font-weight:600">
-      We're ready to build, optimize, or take on any CI/CD workflow in GitHub Actions.
+    <p style="margin-top:28px;color:var(--gold);font-size:1.05rem;font-weight:600">
+      Ready to design, build, and optimize CI/CD pipelines in GitHub Actions — from day one.
+    </p>
+    <p style="margin-top:10px;color:var(--text-dim);font-size:.82rem">
+      For the full technical deep dive, see the <a href="https://mruthyunjaya-lakkappanavar.github.io/gha-reusable-workflows-docs/docs/" target="_blank" style="color:var(--gold);text-decoration:underline">comprehensive documentation</a>.
     </p>
   </div>
 </div>
