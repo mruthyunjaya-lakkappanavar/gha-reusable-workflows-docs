@@ -83,27 +83,7 @@ jobs:
 
 ---
 
-## 4. OIDC Federation (Secretless Cloud Auth)
-
-**Pattern:** Use `id-token: write` permission for OpenID Connect authentication to cloud providers.
-
-**Why it matters:** Eliminates stored cloud credentials entirely. The workflow gets a short-lived token from GitHub's OIDC provider, exchanges it with the cloud provider. No IAM access keys to manage, rotate, or accidentally leak.
-
-```yaml
-permissions:
-  id-token: write    # ← Enable OIDC
-
-steps:
-  - uses: aws-actions/configure-aws-credentials@v4
-    with:
-      role-to-assume: arn:aws:iam::123456789012:role/github-actions
-      aws-region: us-east-1
-      # No access keys needed!
-```
-
----
-
-## 5. Concurrency Controls
+## 4. Concurrency Controls
 
 **Pattern:** Prevent redundant builds and auto-cancel superseded runs.
 
@@ -119,7 +99,7 @@ concurrency:
 
 ---
 
-## 6. Path-Based Triggering
+## 5. Path-Based Triggering
 
 **Pattern:** Only trigger CI when relevant files change.
 
@@ -139,7 +119,7 @@ on:
 
 ---
 
-## 7. Parameterized Builds
+## 6. Parameterized Builds
 
 **Pattern:** Use `workflow_dispatch.inputs` with typed controls (choice, boolean, string).
 
@@ -162,7 +142,7 @@ on:
 
 ---
 
-## 8. Artifact Passing Between Jobs
+## 7. Artifact Passing Between Jobs
 
 **Pattern:** Upload artifacts in one job, download them in dependent jobs. Used for build-once-deploy-many patterns.
 
@@ -186,7 +166,7 @@ jobs:
 
 ---
 
-## 9. Docker Build with GHA Layer Cache
+## 8. Docker Build with GHA Layer Cache
 
 **Pattern:** Use BuildX with GHA cache backend for fast Docker builds.
 
@@ -204,7 +184,7 @@ jobs:
 
 ---
 
-## 10. Composite Action Patterns
+## 9. Composite Action Patterns
 
 **Pattern:** Encapsulate multi-step logic into reusable actions with conditional branching.
 
@@ -231,7 +211,7 @@ This single action handles 3 languages via conditional steps — clean, maintain
 
 ---
 
-## 11. Job Summaries
+## 10. Job Summaries
 
 **Pattern:** Write rich markdown content to `$GITHUB_STEP_SUMMARY` for inline CI reports.
 
@@ -251,7 +231,7 @@ This creates a formatted summary visible directly in the GitHub Actions UI — n
 
 ---
 
-## 12. Dependabot (GHA-Exclusive)
+## 11. Dependabot (GHA-Exclusive)
 
 **Pattern:** Automated dependency update PRs with zero configuration.
 

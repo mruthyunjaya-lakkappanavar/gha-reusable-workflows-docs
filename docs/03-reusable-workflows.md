@@ -236,7 +236,7 @@ permissions:
   contents: write
   packages: write
   pull-requests: write
-  id-token: write    # ← OIDC: no stored cloud credentials needed
+  id-token: write
 ```
 
 ### Usage Example

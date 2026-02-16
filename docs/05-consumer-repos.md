@@ -270,7 +270,6 @@ jobs:
 - Build verification step
 - Package publishing with staged rollout
 - GitHub Environments with approval gates
-- OIDC token support (`id-token: write`)
 - Path-based triggering
 - Parameterized builds with choice dropdowns
 

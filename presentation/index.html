@@ -1,775 +1,598 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GitHub Actions — Reusable Workflows POC</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* ═══════════════════════════════════════════════════════
-   THEME: Navy Blue + Golden Yellow — Polished
-   Part 1 (High-level 1–9) → Part 2 (Details 11–16)
-   ═══════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════
+   Clean, professional presentation theme
+   Navy + Gold — generous whitespace
+   ════════════════════════════════════════════ */
 :root {
-  --navy: #0a1628;
-  --navy-mid: #111d38;
-  --navy-light: #182b50;
-  --navy-card: #13203e;
-  --gold: #e8b931;
-  --gold-soft: #f5d370;
-  --gold-dim: rgba(232,185,49,0.12);
-  --gold-glow: rgba(232,185,49,0.06);
-  --text: #e8ecf1;
-  --text-muted: #8d99ae;
-  --white: #ffffff;
-  --green: #4ade80;
-  --green-dim: rgba(74,222,128,0.12);
-  --blue: #60a5fa;
-  --blue-dim: rgba(96,165,250,0.12);
-  --orange: #fb923c;
-  --orange-dim: rgba(251,146,60,0.12);
-  --purple: #c084fc;
-  --purple-dim: rgba(192,132,252,0.12);
-  --border: #1e3260;
-  --border-light: #263d6a;
-  --radius: 14px;
-  --radius-sm: 8px;
-  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-  --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.15);
-  --shadow-md: 0 4px 20px rgba(0,0,0,0.25);
-  --gh: https://github.com/mruthyunjaya-lakkappanavar;
+  --bg:        #0b1222;
+  --bg-card:   #111b2e;
+  --bg-panel:  #0e1729;
+  --border:    #1c2d4a;
+  --gold:      #e5b83a;
+  --gold-dim:  rgba(229,184,58,.10);
+  --gold-soft: #f2d277;
+  --green:     #34d399;
+  --green-dim: rgba(52,211,153,.10);
+  --blue:      #60a5fa;
+  --blue-dim:  rgba(96,165,250,.10);
+  --orange:    #fb923c;
+  --orange-dim:rgba(251,146,60,.10);
+  --purple:    #a78bfa;
+  --purple-dim:rgba(167,139,250,.10);
+  --text:      #c9d1d9;
+  --text-dim:  #6b7b94;
+  --white:     #f0f4f8;
+  --font:      'Inter', system-ui, -apple-system, sans-serif;
+  --mono:      'SF Mono', 'Fira Code', 'Consolas', monospace;
+  --r:         12px;
 }
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { height: 100%; overflow: hidden; font-family: var(--font); background: var(--navy); color: var(--text); -webkit-font-smoothing: antialiased; }
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
 
-/* ─── Slide Container ─── */
-.deck { position: relative; width: 100vw; height: 100vh; }
-.slide {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column; justify-content: center; align-items: center;
-  padding: 50px 80px;
-  opacity: 0; visibility: hidden;
-  transition: opacity 0.5s cubic-bezier(.4,0,.2,1), transform 0.5s cubic-bezier(.4,0,.2,1);
-  transform: translateX(40px);
-  overflow-y: auto;
-}
-.slide.active { opacity: 1; visibility: visible; transform: translateX(0); }
-.slide.exit-left { opacity: 0; transform: translateX(-40px); }
+/* Slides */
+.deck{position:relative;width:100vw;height:100vh}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:64px 96px;opacity:0;visibility:hidden;transition:opacity .45s ease,transform .45s ease;transform:translateX(30px);overflow-y:auto}
+.slide.active{opacity:1;visibility:visible;transform:none}
+.slide.exit{opacity:0;transform:translateX(-30px)}
 
-/* ─── Typography ─── */
-h1 { font-size: 3.2rem; font-weight: 800; line-height: 1.12; color: var(--white); letter-spacing: -0.03em; }
-h2 { font-size: 2rem; font-weight: 700; margin-bottom: 1rem; color: var(--gold); letter-spacing: -0.02em; }
-h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.55rem; color: var(--white); letter-spacing: -0.01em; }
-p, li { font-size: 1rem; line-height: 1.7; color: var(--text-muted); }
-.subtitle { font-size: 1.2rem; color: var(--text-muted); margin-top: 0.5rem; }
-.big-number { font-size: 3rem; font-weight: 800; color: var(--gold); line-height: 1; letter-spacing: -0.04em; }
-.big-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.12em; margin-top: 5px; font-weight: 500; }
-.gold { color: var(--gold); }
-.green { color: var(--green); }
+/* Typography — airy */
+h1{font-size:2.8rem;font-weight:800;line-height:1.15;color:var(--white);letter-spacing:-.03em}
+h2{font-size:1.6rem;font-weight:700;color:var(--gold);letter-spacing:-.02em;margin-bottom:8px}
+h3{font-size:1rem;font-weight:600;color:var(--white);margin-bottom:6px}
+p,li{font-size:.92rem;line-height:1.7;color:var(--text)}
+.gold{color:var(--gold)}.green{color:var(--green)}
+.subtitle{font-size:1.05rem;color:var(--text-dim);margin-top:6px}
+.section-desc{font-size:.88rem;color:var(--text);margin-bottom:24px;max-width:800px}
 
-/* ─── Layout ─── */
-.content { max-width: 1200px; width: 100%; }
-.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
-.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
-.four-col { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
+/* Layout */
+.content{max-width:1080px;width:100%}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
 
-/* ─── Cards ─── */
-.card {
-  background: var(--navy-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px 22px;
-  transition: border-color 0.3s, box-shadow 0.3s;
-}
-.card:hover { border-color: var(--border-light); box-shadow: var(--shadow-sm); }
-.card-gold { border-left: 3px solid var(--gold); }
-.card-icon { font-size: 1.6rem; margin-bottom: 8px; display: block; }
-.highlight-bar { border-left: 3px solid var(--gold); padding-left: 14px; margin: 6px 0; }
+/* Cards */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:22px 24px}
+.card-sm{padding:16px 18px}
+.card-accent{border-left:3px solid var(--gold)}
 
-/* ─── Badges ─── */
-.badge { display: inline-block; padding: 4px 12px; border-radius: 16px; font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-.badge-gold { background: var(--gold-dim); color: var(--gold); }
-.badge-green { background: var(--green-dim); color: var(--green); }
-.badge-blue { background: var(--blue-dim); color: var(--blue); }
-.badge-orange { background: var(--orange-dim); color: var(--orange); }
-.badge-purple { background: var(--purple-dim); color: var(--purple); }
+/* Badges */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.b-gold{background:var(--gold-dim);color:var(--gold)}
+.b-green{background:var(--green-dim);color:var(--green)}
+.b-blue{background:var(--blue-dim);color:var(--blue)}
+.b-orange{background:var(--orange-dim);color:var(--orange)}
+.b-purple{background:var(--purple-dim);color:var(--purple)}
 
-/* ─── Demo Links ─── */
-a.demo-link {
-  display: inline-flex; align-items: center; gap: 5px;
-  color: var(--gold); text-decoration: none;
-  font-size: 0.72rem; font-weight: 600;
-  padding: 5px 12px;
-  border: 1px solid rgba(232,185,49,0.25);
-  border-radius: 8px;
-  transition: all 0.25s;
-  letter-spacing: 0.02em;
-}
-a.demo-link:hover { background: var(--gold-dim); border-color: var(--gold); }
-a.demo-link.green { color: var(--green); border-color: rgba(74,222,128,0.25); }
-a.demo-link.green:hover { background: var(--green-dim); border-color: var(--green); }
+/* Links */
+a.link{display:inline-flex;align-items:center;gap:4px;color:var(--gold);text-decoration:none;font-size:.72rem;font-weight:600;padding:4px 10px;border:1px solid rgba(229,184,58,.2);border-radius:8px;transition:background .2s}
+a.link:hover{background:var(--gold-dim)}
 
-/* ─── Code ─── */
-pre {
-  background: var(--navy); border: 1px solid var(--border); border-radius: var(--radius-sm);
-  padding: 16px 20px; font-family: var(--mono); font-size: 0.78rem; line-height: 1.6; overflow-x: auto; color: var(--text);
-}
-.inline-code { background: var(--gold-dim); color: var(--gold); padding: 2px 8px; border-radius: 5px; font-family: var(--mono); font-size: 0.82em; font-weight: 500; }
+/* Stat boxes */
+.stat{text-align:center}
+.stat-num{font-size:2.4rem;font-weight:800;color:var(--gold);line-height:1}
+.stat-label{font-size:.68rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
 
-/* ─── Tables ─── */
-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
-th { color: var(--gold); font-weight: 600; background: var(--navy-mid); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; }
-td { color: var(--text-muted); }
-tr:hover td { color: var(--text); background: var(--gold-glow); }
+/* Tables */
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+th{color:var(--gold);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;background:var(--bg-panel)}
+td{color:var(--text)}
+tr:hover td{background:var(--gold-dim)}
 
-/* ─── Feature Lists ─── */
-ul.features { list-style: none; }
-ul.features li { padding: 5px 0; padding-left: 22px; position: relative; font-size: 0.95rem; }
-ul.features li::before { content: "▸"; position: absolute; left: 0; color: var(--gold); font-weight: bold; }
+/* Code */
+pre{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px 20px;font-family:var(--mono);font-size:.76rem;line-height:1.65;overflow-x:auto;color:var(--text)}
+code{font-family:var(--mono);font-size:.82em;background:var(--gold-dim);color:var(--gold);padding:1px 6px;border-radius:4px}
 
-/* ─── Diagram ─── */
-.diagram { background: var(--navy-mid); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; font-family: var(--mono); font-size: 0.72rem; line-height: 1.5; white-space: pre; overflow-x: auto; color: var(--text-muted); }
+/* Feature list */
+ul.feat{list-style:none}
+ul.feat li{padding:4px 0 4px 20px;position:relative;font-size:.88rem}
+ul.feat li::before{content:"›";position:absolute;left:0;color:var(--gold);font-weight:700}
 
-/* ─── Hub-Spoke Visual ─── */
-.hub-spoke { display: flex; flex-direction: column; align-items: center; gap: 0; }
-.hub-box {
-  background: linear-gradient(135deg, var(--navy-light) 0%, var(--navy-mid) 100%);
-  border: 2px solid var(--gold);
-  border-radius: var(--radius);
-  padding: 18px 28px;
-  width: 100%;
-  box-shadow: 0 0 30px rgba(232,185,49,0.08);
-}
-.hub-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
-.hub-header h3 { margin: 0; font-size: 1.15rem; }
-.hub-header p { margin: 0; font-size: 0.82rem; color: var(--text-muted); }
-.hub-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.hub-section { margin-bottom: 6px; }
-.hub-section-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-right: 10px; font-weight: 500; }
+/* Pipeline flow */
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.flow-step{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:8px 16px;text-align:center;font-size:.78rem}
+.flow-arr{color:var(--gold);font-weight:700;font-size:.9rem}
+.flow-group{display:flex;flex-direction:column;gap:4px;border:1px dashed var(--border);border-radius:10px;padding:6px 8px;background:rgba(229,184,58,.03)}
+.flow-group .flow-step{font-size:.7rem;padding:4px 10px}
+.flow-slack{border-color:var(--green)!important;background:var(--green-dim)}
 
-.spoke-connector {
-  display: flex; flex-direction: column; align-items: center; padding: 4px 0;
-}
-.spoke-trunk { width: 2px; height: 14px; background: var(--gold); }
-.spoke-label { font-size: 0.65rem; color: var(--gold); font-family: var(--mono); padding: 2px 10px; background: var(--gold-dim); border-radius: 4px; font-weight: 500; }
-.spoke-branches { display: flex; width: 85%; justify-content: space-between; position: relative; }
-.spoke-branches::before { content: ''; position: absolute; top: 0; left: 10%; right: 10%; height: 2px; background: var(--gold); }
-.spoke-branch { width: 2px; height: 16px; background: var(--gold); position: relative; }
-.spoke-branch::after { content: '▼'; position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); color: var(--gold); font-size: 0.6rem; }
+/* Pipeline row */
+.pipe-row{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;margin-bottom:12px}
+.pipe-row h4{font-size:.72rem;color:var(--gold);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;font-weight:600;display:flex;align-items:center;justify-content:space-between}
 
-.consumer-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; width: 100%; }
-.consumer-card {
-  background: var(--navy-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 18px;
-  text-align: center;
-  transition: border-color 0.3s;
-}
-.consumer-card:hover { border-color: var(--gold); }
-.consumer-card .card-icon { font-size: 1.4rem; margin-bottom: 6px; }
-.consumer-card h3 { font-size: 0.88rem; margin-bottom: 6px; }
-.consumer-card p { font-size: 0.78rem; margin-bottom: 8px; }
-.consumer-card .wf-badges { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-bottom: 8px; }
-.consumer-card .wf-badges .badge { font-size: 0.58rem; padding: 2px 7px; }
+/* Title slide */
+.title-slide{text-align:center}
+.title-slide h1{font-size:3rem}
 
-/* ─── Capability Visual ─── */
-.cap-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-.cap-item {
-  background: var(--navy-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 18px;
-  display: flex; align-items: flex-start; gap: 14px;
-  transition: border-color 0.3s;
-  position: relative;
-  overflow: hidden;
-}
-.cap-item:hover { border-color: var(--gold); }
-.cap-item::before {
-  content: '';
-  position: absolute; top: 0; left: 0; bottom: 0;
-  width: 3px;
-}
-.cap-item.ci::before { background: var(--gold); }
-.cap-item.test::before { background: var(--green); }
-.cap-item.security::before { background: var(--orange); }
-.cap-item.deploy::before { background: var(--blue); }
-.cap-item.matrix::before { background: var(--purple); }
-.cap-item.observe::before { background: var(--gold-soft); }
-.cap-icon { font-size: 1.5rem; flex-shrink: 0; margin-top: 2px; }
-.cap-text h4 { font-size: 0.88rem; font-weight: 700; color: var(--white); margin-bottom: 4px; }
-.cap-text p { font-size: 0.78rem; line-height: 1.5; margin-bottom: 6px; }
-.cap-text .cap-detail { font-size: 0.7rem; color: var(--text-muted); font-family: var(--mono); }
-.cap-check { color: var(--green); font-size: 0.72rem; font-weight: 600; }
+/* Divider */
+.divider{text-align:center;background:linear-gradient(135deg,var(--bg-panel),var(--bg))}
+.divider h1{color:var(--gold);font-size:2.2rem}
+.divider-line{width:60px;height:2px;background:var(--gold);margin:16px auto;border-radius:2px}
 
-/* ─── Pipeline Flow ─── */
-.flow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; }
-.flow-step {
-  background: var(--navy-mid); border: 1px solid var(--border); border-radius: 10px;
-  padding: 8px 14px; text-align: center; min-width: 85px; font-size: 0.82rem;
-  transition: border-color 0.3s;
-}
-.flow-step:hover { border-color: var(--gold); }
-.flow-arrow { color: var(--gold); font-size: 1rem; font-weight: bold; }
-.flow-parallel {
-  display: flex; flex-direction: column; gap: 4px;
-  border: 1px dashed var(--border-light); border-radius: 10px;
-  padding: 6px; background: var(--gold-glow);
-}
-.flow-parallel .flow-step { min-width: 80px; font-size: 0.72rem; padding: 5px 10px; }
-.flow-slack { border-color: var(--green) !important; }
-.slack-icon { font-size: 0.72rem; }
+/* Part label */
+.part{position:absolute;top:20px;right:28px;font-size:.62rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.12em;font-weight:500}
 
-/* ─── Pipeline Visual (compact) ─── */
-.pipeline-visual {
-  background: var(--navy-mid); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 14px 18px; margin-bottom: 10px;
-}
-.pipeline-visual h4 { font-size: 0.75rem; color: var(--gold); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 600; }
-.pipeline-visual .flow { justify-content: flex-start; gap: 5px; }
-.pipeline-visual .flow-step { font-size: 0.72rem; padding: 5px 10px; min-width: auto; }
-.pipeline-visual .flow-arrow { font-size: 0.85rem; }
-.pipeline-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.pipeline-header h4 { margin-bottom: 0; }
+/* SVG diagram styles */
+.diagram-svg{width:100%;max-width:960px;margin:0 auto;display:block}
+.diagram-svg text{font-family:var(--font);fill:var(--text)}
+.diagram-svg .hub-rect{fill:#111b2e;stroke:var(--gold);stroke-width:2;rx:12}
+.diagram-svg .spoke-rect{fill:#111b2e;stroke:var(--border);stroke-width:1.5;rx:10}
+.diagram-svg .spoke-rect:hover{stroke:var(--gold)}
+.diagram-svg .connector{stroke:var(--gold);stroke-width:1.5;fill:none}
+.diagram-svg .connector-dot{fill:var(--gold)}
+.diagram-svg .label-gold{fill:var(--gold);font-weight:600}
+.diagram-svg .label-white{fill:var(--white);font-weight:600}
+.diagram-svg .label-dim{fill:var(--text-dim);font-size:11px}
+.diagram-svg .badge-rect{rx:10;ry:10}
 
-/* ─── Achievements Table ─── */
-.achievements-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-.achievements-table th { padding: 9px 12px; color: var(--gold); font-weight: 600; background: var(--navy-mid); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 2px solid var(--border); }
-.achievements-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--text-muted); vertical-align: middle; }
-.achievements-table tr:hover td { color: var(--text); background: var(--gold-glow); }
-.achievements-table .component { color: var(--white); font-weight: 600; }
-.status-badge { display: inline-flex; align-items: center; gap: 4px; background: var(--green-dim); color: var(--green); padding: 2px 8px; border-radius: 10px; font-size: 0.66rem; font-weight: 600; }
+/* Nav */
+.nav{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;background:var(--bg-panel);border:1px solid var(--border);border-radius:40px;padding:8px 20px;z-index:1000;box-shadow:0 4px 24px rgba(0,0,0,.35)}
+.nav button{background:none;border:none;color:var(--text-dim);font-size:1rem;cursor:pointer;padding:4px 8px;border-radius:8px;transition:all .2s}
+.nav button:hover{color:var(--gold);background:var(--gold-dim)}
+.counter{font-size:.7rem;color:var(--text-dim);min-width:48px;text-align:center;font-weight:500;font-variant-numeric:tabular-nums}
+.dots{display:flex;gap:5px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--border);cursor:pointer;transition:all .3s}
+.dot:hover{background:#2a3f6a}
+.dot.active{background:var(--gold);transform:scale(1.35);box-shadow:0 0 6px var(--gold-dim)}
 
-/* ─── Section Divider ─── */
-.divider-slide { background: linear-gradient(135deg, var(--navy-mid) 0%, var(--navy) 100%); text-align: center; }
-.divider-slide h1 { color: var(--gold); font-size: 2.5rem; }
-.divider-slide .divider-line { width: 80px; height: 3px; background: var(--gold); margin: 20px auto; border-radius: 2px; }
-
-/* ─── Title Slide ─── */
-.title-slide { text-align: center; }
-.title-slide h1 { font-size: 3.5rem; }
-.title-logo { font-size: 4.5rem; margin-bottom: 18px; display: block; }
-.meta { margin-top: 28px; font-size: 0.88rem; color: var(--text-muted); }
-
-/* ─── Part indicator ─── */
-.part-label { position: absolute; top: 20px; right: 28px; font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.6; font-weight: 500; }
-
-/* ─── Navigation ─── */
-.nav {
-  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-  display: flex; align-items: center; gap: 12px;
-  background: var(--navy-mid); border: 1px solid var(--border); border-radius: 40px;
-  padding: 8px 18px; z-index: 1000; box-shadow: var(--shadow-md); backdrop-filter: blur(10px);
-}
-.nav button { background: none; border: none; color: var(--text-muted); font-size: 1rem; cursor: pointer; padding: 4px 8px; border-radius: 8px; transition: all 0.2s; }
-.nav button:hover { color: var(--gold); background: var(--gold-dim); }
-.slide-counter { font-size: 0.72rem; color: var(--text-muted); min-width: 52px; text-align: center; font-weight: 500; font-variant-numeric: tabular-nums; }
-.dots { display: flex; gap: 4px; }
-.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); cursor: pointer; transition: all 0.3s; }
-.dot:hover { background: var(--border-light); }
-.dot.active { background: var(--gold); transform: scale(1.4); box-shadow: 0 0 8px var(--gold-dim); }
-.dot.part2 { background: var(--navy-light); }
-.dot.part2.active { background: var(--gold-soft); transform: scale(1.4); }
-
-/* ─── Responsive ─── */
-@media (max-width: 900px) {
-  .slide { padding: 24px 20px; }
-  h1 { font-size: 2rem; }
-  h2 { font-size: 1.4rem; }
-  .two-col, .three-col, .four-col, .consumer-cards, .cap-grid { grid-template-columns: 1fr; }
+@media(max-width:900px){
+  .slide{padding:24px 20px}
+  h1{font-size:1.8rem}h2{font-size:1.2rem}
+  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
-
 <div class="deck" id="deck">
 
-<!-- ╔══════════════════════════════════════════════════════════╗
-     ║  PART 1 — HIGH-LEVEL OVERVIEW  (Slides 1–9)            ║
-     ╚══════════════════════════════════════════════════════════╝ -->
-
-<!-- ═══════ SLIDE 1: TITLE ═══════ -->
-<div class="slide active title-slide" data-slide="0" data-part="1">
+<!-- ══════════════════════════════════════════
+     SLIDE 1 — Title
+     ══════════════════════════════════════════ -->
+<div class="slide active title-slide" data-slide="0">
   <div class="content">
-    <span class="title-logo">⚡</span>
-    <h1>GitHub Actions<br/><span class="gold">Reusable Workflows</span></h1>
-    <p class="subtitle">Proof of Concept — Centralized CI/CD Platform</p>
-    <div class="meta">
-      <span class="badge badge-gold">POC Complete</span>&nbsp;
-      <span class="badge badge-green">Production-Ready Patterns</span>
+    <svg width="72" height="72" viewBox="0 0 72 72" style="margin-bottom:20px"><circle cx="36" cy="36" r="34" fill="none" stroke="var(--gold)" stroke-width="2.5"/><path d="M24 36l8 8 16-16" stroke="var(--gold)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <h1>GitHub Actions<br><span class="gold">Reusable Workflows</span></h1>
+    <p class="subtitle">Proof of Concept — Hands-on CI/CD Platform Competency</p>
+    <div style="margin-top:24px;display:flex;gap:8px;justify-content:center">
+      <span class="badge b-gold">POC Complete</span>
+      <span class="badge b-green">Production-Ready Patterns</span>
     </div>
   </div>
 </div>
 
-<!-- ═══════ SLIDE 2: POC SCOPE ═══════ -->
-<div class="slide" data-slide="1" data-part="1">
-  <span class="part-label">Part 1 — Overview</span>
+<!-- ══════════════════════════════════════════
+     SLIDE 2 — POC Scope
+     ══════════════════════════════════════════ -->
+<div class="slide" data-slide="1">
+  <span class="part">Part 1</span>
   <div class="content">
     <h2>POC Scope &amp; Objectives</h2>
-    <p style="color:var(--text);font-size:1.1rem;margin-bottom:24px;">
-      We built a <strong class="gold">hands-on proof of concept</strong> to demonstrate GitHub Actions capabilities — exploring reusable workflows, composite actions, and platform patterns across multiple languages and real-world scenarios.
-    </p>
-    <div class="three-col">
-      <div class="card card-gold">
-        <span class="card-icon">🏗️</span>
-        <h3>Build Reusable Pipelines</h3>
-        <p>Centralized, parameterized workflows that repos adopt with minimal config.</p>
+    <p class="section-desc">A hands-on proof of concept to demonstrate GitHub Actions capabilities — reusable workflows, composite actions, and platform patterns across multiple languages.</p>
+
+    <div class="grid-3" style="margin-bottom:28px">
+      <div class="card card-accent">
+        <h3>Reusable Pipelines</h3>
+        <p>Centralized, parameterized workflows that any repo can adopt with ~15 lines of YAML.</p>
       </div>
-      <div class="card card-gold">
-        <span class="card-icon">🌐</span>
-        <h3>Multi-Language Coverage</h3>
-        <p>Validate GHA across Python, Node.js, and Go — apps and libraries.</p>
+      <div class="card card-accent">
+        <h3>Multi-Language</h3>
+        <p>Python, Node.js, and Go — applications and libraries — all using the same shared workflows.</p>
       </div>
-      <div class="card card-gold">
-        <span class="card-icon">🔬</span>
-        <h3>Explore Advanced Features</h3>
-        <p>Service containers, matrix builds, environment gates, OIDC, Docker, and observability.</p>
+      <div class="card card-accent">
+        <h3>Platform Features</h3>
+        <p>Service containers, matrix builds, environment gates, Docker, Slack, and live dashboards.</p>
       </div>
     </div>
-    <div class="card" style="text-align:center;margin-top:18px;background:var(--navy-light);border-color:var(--gold);">
-      <p style="color:var(--text);font-size:1rem;">
-        <strong class="gold">Goal:</strong> Demonstrate end-to-end GHA competency — from workflow design to deployment pipelines — with production-grade patterns.
-      </p>
+
+    <div class="card" style="text-align:center;border-color:var(--gold);background:var(--bg-panel)">
+      <p style="color:var(--white);font-size:.95rem"><strong class="gold">Goal:</strong> Demonstrate end-to-end GHA competency with production-grade patterns.</p>
     </div>
   </div>
 </div>
 
-<!-- ═══════ SLIDE 3: THE FULL PICTURE ═══════ -->
-<div class="slide" data-slide="2" data-part="1">
-  <span class="part-label">Part 1 — Overview</span>
+<!-- ══════════════════════════════════════════
+     SLIDE 3 — Hub & Spoke (SVG)
+     ══════════════════════════════════════════ -->
+<div class="slide" data-slide="2">
+  <span class="part">Part 1</span>
   <div class="content">
-    <h2>The Full Picture — Hub &amp; Spoke</h2>
-    <p style="color:var(--text);margin-bottom:16px;">One central repository owns all CI/CD logic. Four consumer repos adopt it via <span class="inline-code">workflow_call</span> — zero pipeline code in app repos.</p>
+    <h2>The Full Picture</h2>
+    <p class="section-desc">One central repository owns all CI/CD logic. Four consumer repos adopt it via <code>workflow_call</code>.</p>
 
-    <div class="hub-spoke">
+    <svg class="diagram-svg" viewBox="0 0 960 420" xmlns="http://www.w3.org/2000/svg">
       <!-- Hub -->
-      <div class="hub-box">
-        <div class="hub-header">
-          <span style="font-size:1.6rem;">⚡</span>
-          <div style="flex:1;">
-            <h3 style="margin:0;">github-shared-workflows <span style="font-weight:400;color:var(--text-muted);font-size:0.85rem;">— Central Hub</span></h3>
-          </div>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows" target="_blank">View Repo →</a>
-          <a class="demo-link green" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/actions" target="_blank">Actions →</a>
-        </div>
-        <div class="hub-section">
-          <span class="hub-section-label">Workflows</span>
-          <span class="badge badge-gold">reusable-ci</span>
-          <span class="badge badge-gold">reusable-matrix-ci</span>
-          <span class="badge badge-gold">reusable-integration-ci</span>
-          <span class="badge badge-gold">reusable-publish</span>
-          <span class="badge badge-gold">reusable-release</span>
-        </div>
-        <div class="hub-section">
-          <span class="hub-section-label">Actions</span>
-          <span class="badge badge-green">setup-toolchain</span>
-          <span class="badge badge-green">slack-notify</span>
-          <span style="font-size:0.72rem;color:var(--text-muted);margin-left:8px;">+ live dashboard (GitHub Pages)</span>
-        </div>
-      </div>
+      <rect class="hub-rect" x="180" y="20" width="600" height="120"/>
+      <text class="label-white" x="280" y="58" font-size="15">github-shared-workflows</text>
+      <text class="label-dim" x="600" y="58" font-size="11">Central Hub</text>
+      <!-- Workflow badges -->
+      <rect class="badge-rect" x="200" y="75" width="90" height="22" fill="rgba(229,184,58,.12)" stroke="none"/>
+      <text class="label-gold" x="245" y="90" font-size="10" text-anchor="middle">reusable-ci</text>
+      <rect class="badge-rect" x="300" y="75" width="105" height="22" fill="rgba(229,184,58,.12)" stroke="none"/>
+      <text class="label-gold" x="352" y="90" font-size="10" text-anchor="middle">matrix-ci</text>
+      <rect class="badge-rect" x="415" y="75" width="110" height="22" fill="rgba(229,184,58,.12)" stroke="none"/>
+      <text class="label-gold" x="470" y="90" font-size="10" text-anchor="middle">integration-ci</text>
+      <rect class="badge-rect" x="535" y="75" width="80" height="22" fill="rgba(229,184,58,.12)" stroke="none"/>
+      <text class="label-gold" x="575" y="90" font-size="10" text-anchor="middle">publish</text>
+      <rect class="badge-rect" x="625" y="75" width="80" height="22" fill="rgba(229,184,58,.12)" stroke="none"/>
+      <text class="label-gold" x="665" y="90" font-size="10" text-anchor="middle">release</text>
+      <!-- Actions badges -->
+      <rect class="badge-rect" x="200" y="104" width="100" height="20" fill="rgba(52,211,153,.10)" stroke="none"/>
+      <text x="250" y="117" font-size="10" text-anchor="middle" fill="var(--green)" font-weight="600">setup-toolchain</text>
+      <rect class="badge-rect" x="310" y="104" width="85" height="20" fill="rgba(52,211,153,.10)" stroke="none"/>
+      <text x="352" y="117" font-size="10" text-anchor="middle" fill="var(--green)" font-weight="600">slack-notify</text>
 
-      <!-- Connector -->
-      <div class="spoke-connector">
-        <div class="spoke-trunk"></div>
-        <div class="spoke-label">workflow_call</div>
-        <div class="spoke-trunk"></div>
-      </div>
-      <div class="spoke-branches">
-        <div class="spoke-branch"></div>
-        <div class="spoke-branch"></div>
-        <div class="spoke-branch"></div>
-        <div class="spoke-branch"></div>
-      </div>
+      <!-- Connectors -->
+      <line class="connector" x1="480" y1="140" x2="480" y2="175"/>
+      <rect x="440" y="175" width="80" height="20" rx="4" fill="var(--gold-dim)" stroke="none"/>
+      <text x="480" y="189" font-size="10" text-anchor="middle" fill="var(--gold)" font-weight="500" font-family="var(--mono)">workflow_call</text>
+      <line class="connector" x1="480" y1="195" x2="480" y2="210"/>
+      <!-- Horizontal bar -->
+      <line class="connector" x1="140" y1="210" x2="820" y2="210"/>
+      <!-- Vertical drops -->
+      <line class="connector" x1="140" y1="210" x2="140" y2="240"/>
+      <line class="connector" x1="367" y1="210" x2="367" y2="240"/>
+      <line class="connector" x1="593" y1="210" x2="593" y2="240"/>
+      <line class="connector" x1="820" y1="210" x2="820" y2="240"/>
+      <!-- Arrowheads -->
+      <polygon class="connector-dot" points="140,245 135,237 145,237"/>
+      <polygon class="connector-dot" points="367,245 362,237 372,237"/>
+      <polygon class="connector-dot" points="593,245 588,237 598,237"/>
+      <polygon class="connector-dot" points="820,245 815,237 825,237"/>
 
-      <!-- Consumer Cards -->
-      <div class="consumer-cards" style="margin-top:16px;">
-        <div class="consumer-card" style="border-top:3px solid var(--blue);">
-          <span class="card-icon">🐍</span>
-          <h3>sample-app-python</h3>
-          <p>FastAPI · SQLAlchemy · pytest</p>
-          <div class="wf-badges">
-            <span class="badge badge-gold">CI</span>
-            <span class="badge badge-gold">Integration</span>
-            <span class="badge badge-gold">Release</span>
-            <span class="badge badge-green">💬 Slack</span>
-          </div>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-python/actions" target="_blank" style="font-size:0.65rem;">Actions →</a>
-        </div>
-        <div class="consumer-card" style="border-top:3px solid var(--green);">
-          <span class="card-icon">📦</span>
-          <h3>sample-app-node</h3>
-          <p>Express · TypeScript · Jest</p>
-          <div class="wf-badges">
-            <span class="badge badge-gold">CI</span>
-            <span class="badge badge-gold">Release</span>
-            <span class="badge badge-green">💬 Slack</span>
-          </div>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-node/actions" target="_blank" style="font-size:0.65rem;">Actions →</a>
-        </div>
-        <div class="consumer-card" style="border-top:3px solid var(--orange);">
-          <span class="card-icon">🐹</span>
-          <h3>sample-app-go</h3>
-          <p>gorilla/mux · go test · lint</p>
-          <div class="wf-badges">
-            <span class="badge badge-gold">CI</span>
-            <span class="badge badge-gold">Release</span>
-            <span class="badge badge-green">💬 Slack</span>
-          </div>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-go/actions" target="_blank" style="font-size:0.65rem;">Actions →</a>
-        </div>
-        <div class="consumer-card" style="border-top:3px solid var(--purple);">
-          <span class="card-icon">📚</span>
-          <h3>sample-lib-node</h3>
-          <p>npm library · multi-platform</p>
-          <div class="wf-badges">
-            <span class="badge badge-gold">Matrix CI</span>
-            <span class="badge badge-gold">Publish</span>
-            <span class="badge badge-gold">Release</span>
-            <span class="badge badge-green">💬 Slack</span>
-          </div>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-lib-node/actions" target="_blank" style="font-size:0.65rem;">Actions →</a>
-        </div>
-      </div>
-    </div>
+      <!-- Consumer 1: Python -->
+      <rect class="spoke-rect" x="50" y="250" width="180" height="155" style="stroke:var(--blue)"/>
+      <rect x="50" y="250" width="180" height="4" rx="2" fill="var(--blue)"/>
+      <text class="label-white" x="140" y="280" font-size="13" text-anchor="middle">sample-app-python</text>
+      <text class="label-dim" x="140" y="298" text-anchor="middle">FastAPI · pytest · Python 3.12</text>
+      <rect class="badge-rect" x="65" y="310" width="40" height="18" fill="var(--gold-dim)"/>
+      <text x="85" y="322" font-size="9" text-anchor="middle" fill="var(--gold)" font-weight="600">CI</text>
+      <rect class="badge-rect" x="110" y="310" width="60" height="18" fill="var(--gold-dim)"/>
+      <text x="140" y="322" font-size="9" text-anchor="middle" fill="var(--gold)" font-weight="600">Integ</text>
+      <rect class="badge-rect" x="175" y="310" width="45" height="18" fill="var(--gold-dim)"/>
+      <text x="198" y="322" font-size="9" text-anchor="middle" fill="var(--gold)" font-weight="600">Rel</text>
+      <rect class="badge-rect" x="85" y="335" width="50" height="18" fill="var(--green-dim)"/>
+      <text x="110" y="347" font-size="9" text-anchor="middle" fill="var(--green)" font-weight="600">Slack</text>
+      <text class="label-dim" x="140" y="382" font-size="10" text-anchor="middle" style="cursor:pointer;text-decoration:underline">
+        <a href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-python/actions" target="_blank" fill="var(--text-dim)">View Actions →</a>
+      </text>
+
+      <!-- Consumer 2: Node -->
+      <rect class="spoke-rect" x="277" y="250" width="180" height="155" style="stroke:var(--green)"/>
+      <rect x="277" y="250" width="180" height="4" rx="2" fill="var(--green)"/>
+      <text class="label-white" x="367" y="280" font-size="13" text-anchor="middle">sample-app-node</text>
+      <text class="label-dim" x="367" y="298" text-anchor="middle">Express · Jest · Node 20</text>
+      <rect class="badge-rect" x="310" y="310" width="40" height="18" fill="var(--gold-dim)"/>
+      <text x="330" y="322" font-size="9" text-anchor="middle" fill="var(--gold)" font-weight="600">CI</text>
+      <rect class="badge-rect" x="358" y="310" width="55" height="18" fill="var(--gold-dim)"/>
+      <text x="385" y="322" font-size="9" text-anchor="middle" fill="var(--gold)" font-weight="600">Release</text>
+      <rect class="badge-rect" x="335" y="335" width="50" height="18" fill="var(--green-dim)"/>
+      <text x="360" y="347" font-size="9" text-anchor="middle" fill="var(--green)" font-weight="600">Slack</text>
+      <text class="label-dim" x="367" y="382" font-size="10" text-anchor="middle">
+        <a href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-node/actions" target="_blank" fill="var(--text-dim)">View Actions →</a>
+      </text>
+
+      <!-- Consumer 3: Go -->
+      <rect class="spoke-rect" x="503" y="250" width="180" height="155" style="stroke:var(--orange)"/>
+      <rect x="503" y="250" width="180" height="4" rx="2" fill="var(--orange)"/>
+      <text class="label-white" x="593" y="280" font-size="13" text-anchor="middle">sample-app-go</text>
+      <text class="label-dim" x="593" y="298" text-anchor="middle">gorilla/mux · go test · Go 1.24</text>
+      <rect class="badge-rect" x="536" y="310" width="40" height="18" fill="var(--gold-dim)"/>
+      <text x="556" y="322" font-size="9" text-anchor="middle" fill="var(--gold)" font-weight="600">CI</text>
+      <rect class="badge-rect" x="584" y="310" width="55" height="18" fill="var(--gold-dim)"/>
+      <text x="611" y="322" font-size="9" text-anchor="middle" fill="var(--gold)" font-weight="600">Release</text>
+      <rect class="badge-rect" x="561" y="335" width="50" height="18" fill="var(--green-dim)"/>
+      <text x="586" y="347" font-size="9" text-anchor="middle" fill="var(--green)" font-weight="600">Slack</text>
+      <text class="label-dim" x="593" y="382" font-size="10" text-anchor="middle">
+        <a href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-go/actions" target="_blank" fill="var(--text-dim)">View Actions →</a>
+      </text>
+
+      <!-- Consumer 4: Lib -->
+      <rect class="spoke-rect" x="730" y="250" width="180" height="155" style="stroke:var(--purple)"/>
+      <rect x="730" y="250" width="180" height="4" rx="2" fill="var(--purple)"/>
+      <text class="label-white" x="820" y="280" font-size="13" text-anchor="middle">sample-lib-node</text>
+      <text class="label-dim" x="820" y="298" text-anchor="middle">npm library · multi-platform</text>
+      <rect class="badge-rect" x="745" y="310" width="50" height="18" fill="var(--gold-dim)"/>
+      <text x="770" y="322" font-size="9" text-anchor="middle" fill="var(--gold)" font-weight="600">Matrix</text>
+      <rect class="badge-rect" x="800" y="310" width="45" height="18" fill="var(--gold-dim)"/>
+      <text x="823" y="322" font-size="9" text-anchor="middle" fill="var(--gold)" font-weight="600">Pub</text>
+      <rect class="badge-rect" x="850" y="310" width="45" height="18" fill="var(--gold-dim)"/>
+      <text x="873" y="322" font-size="9" text-anchor="middle" fill="var(--gold)" font-weight="600">Rel</text>
+      <rect class="badge-rect" x="795" y="335" width="50" height="18" fill="var(--green-dim)"/>
+      <text x="820" y="347" font-size="9" text-anchor="middle" fill="var(--green)" font-weight="600">Slack</text>
+      <text class="label-dim" x="820" y="382" font-size="10" text-anchor="middle">
+        <a href="https://github.com/mruthyunjaya-lakkappanavar/sample-lib-node/actions" target="_blank" fill="var(--text-dim)">View Actions →</a>
+      </text>
+    </svg>
   </div>
 </div>
 
-<!-- ═══════ SLIDE 4: CONSUMER REPOS & DEMO ═══════ -->
-<div class="slide" data-slide="3" data-part="1">
-  <span class="part-label">Part 1 — Overview</span>
+<!-- ══════════════════════════════════════════
+     SLIDE 4 — Consumer Repos & Demo Links
+     ══════════════════════════════════════════ -->
+<div class="slide" data-slide="3">
+  <span class="part">Part 1</span>
   <div class="content">
-    <h2>Consumer Repos — Demo Navigation</h2>
-    <p style="color:var(--text);margin-bottom:16px;">Each consumer repo calls shared workflows with <strong class="gold">~15 lines of YAML</strong>. Click any link below to navigate to the live repo or workflow for demo.</p>
+    <h2>Consumer Repos</h2>
+    <p class="section-desc">Each consumer calls shared workflows with <strong class="gold">~15 lines of YAML</strong>. Click to navigate for live demo.</p>
 
-    <div class="two-col">
-      <!-- Python -->
-      <div class="card" style="border-left:3px solid var(--blue);">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-          <span style="font-size:1.3rem;">🐍</span>
-          <h3 style="margin:0;">sample-app-python</h3>
-          <span class="badge badge-blue" style="margin-left:auto;">Python 3.12</span>
+    <div class="grid-2">
+      <div class="card" style="border-left:3px solid var(--blue)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <h3 style="margin:0;flex:1">sample-app-python</h3>
+          <span class="badge b-blue">Python 3.12</span>
         </div>
-        <p style="font-size:0.85rem;margin-bottom:10px;">The most complete consumer — uses CI, Integration CI (with PostgreSQL + Redis), and Release.</p>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-python" target="_blank">📂 Repo</a>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-python/actions" target="_blank">▶ Actions</a>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-python/blob/main/.github/workflows/ci.yml" target="_blank">📄 ci.yml</a>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-python/blob/main/.github/workflows/release.yml" target="_blank">📄 release.yml</a>
+        <p style="margin-bottom:14px">Full-stack consumer — CI, Integration CI (PostgreSQL + Redis), Docker build, staged deploy, and Release.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-python" target="_blank">Repo</a>
+          <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-python/actions" target="_blank">Actions</a>
+          <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-python/blob/main/.github/workflows/ci.yml" target="_blank">ci.yml</a>
+          <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-python/blob/main/.github/workflows/release.yml" target="_blank">release.yml</a>
         </div>
-        <div style="font-size:0.72rem;color:var(--text-muted);">Calls: <strong style="color:var(--gold);">reusable-ci</strong> + <strong style="color:var(--gold);">reusable-integration-ci</strong> + <strong style="color:var(--gold);">reusable-release</strong> &nbsp; 💬 Slack on all</div>
       </div>
 
-      <!-- Node App -->
-      <div class="card" style="border-left:3px solid var(--green);">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-          <span style="font-size:1.3rem;">📦</span>
-          <h3 style="margin:0;">sample-app-node</h3>
-          <span class="badge badge-green" style="margin-left:auto;">Node 20</span>
+      <div class="card" style="border-left:3px solid var(--green)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <h3 style="margin:0;flex:1">sample-app-node</h3>
+          <span class="badge b-green">Node 20</span>
         </div>
-        <p style="font-size:0.85rem;margin-bottom:10px;">Standard app CI — lint, test, security scan, release automation via conventional commits.</p>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-node" target="_blank">📂 Repo</a>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-node/actions" target="_blank">▶ Actions</a>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-node/blob/main/.github/workflows/ci.yml" target="_blank">📄 ci.yml</a>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-node/blob/main/.github/workflows/release.yml" target="_blank">📄 release.yml</a>
+        <p style="margin-bottom:14px">Standard app CI — lint, test, security scan, release via conventional commits.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-node" target="_blank">Repo</a>
+          <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-node/actions" target="_blank">Actions</a>
+          <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-node/blob/main/.github/workflows/ci.yml" target="_blank">ci.yml</a>
+          <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-node/blob/main/.github/workflows/release.yml" target="_blank">release.yml</a>
         </div>
-        <div style="font-size:0.72rem;color:var(--text-muted);">Calls: <strong style="color:var(--gold);">reusable-ci</strong> + <strong style="color:var(--gold);">reusable-release</strong> &nbsp; 💬 Slack on all</div>
       </div>
 
-      <!-- Go -->
-      <div class="card" style="border-left:3px solid var(--orange);">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-          <span style="font-size:1.3rem;">🐹</span>
-          <h3 style="margin:0;">sample-app-go</h3>
-          <span class="badge badge-orange" style="margin-left:auto;">Go 1.24</span>
+      <div class="card" style="border-left:3px solid var(--orange)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <h3 style="margin:0;flex:1">sample-app-go</h3>
+          <span class="badge b-orange">Go 1.24</span>
         </div>
-        <p style="font-size:0.85rem;margin-bottom:10px;">Go application CI — golangci-lint, go test with coverage, security scanning, release.</p>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-go" target="_blank">📂 Repo</a>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-go/actions" target="_blank">▶ Actions</a>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-go/blob/main/.github/workflows/ci.yml" target="_blank">📄 ci.yml</a>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-go/blob/main/.github/workflows/release.yml" target="_blank">📄 release.yml</a>
+        <p style="margin-bottom:14px">Go CI — golangci-lint, go test with coverage, security scanning, automated release.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-go" target="_blank">Repo</a>
+          <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-go/actions" target="_blank">Actions</a>
+          <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-go/blob/main/.github/workflows/ci.yml" target="_blank">ci.yml</a>
+          <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-go/blob/main/.github/workflows/release.yml" target="_blank">release.yml</a>
         </div>
-        <div style="font-size:0.72rem;color:var(--text-muted);">Calls: <strong style="color:var(--gold);">reusable-ci</strong> + <strong style="color:var(--gold);">reusable-release</strong> &nbsp; 💬 Slack on all</div>
       </div>
 
-      <!-- Node Lib -->
-      <div class="card" style="border-left:3px solid var(--purple);">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-          <span style="font-size:1.3rem;">📚</span>
-          <h3 style="margin:0;">sample-lib-node</h3>
-          <span class="badge badge-purple" style="margin-left:auto;">Node 18/20/22</span>
+      <div class="card" style="border-left:3px solid var(--purple)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <h3 style="margin:0;flex:1">sample-lib-node</h3>
+          <span class="badge b-purple">Node 18 / 20 / 22</span>
         </div>
-        <p style="font-size:0.85rem;margin-bottom:10px;">npm library — 18-job matrix (3 versions × 3 OS × 2 test types), staged publish with approval.</p>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-lib-node" target="_blank">📂 Repo</a>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-lib-node/actions" target="_blank">▶ Actions</a>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-lib-node/blob/main/.github/workflows/ci.yml" target="_blank">📄 ci.yml</a>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-lib-node/blob/main/.github/workflows/publish.yml" target="_blank">📄 publish.yml</a>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-lib-node/blob/main/.github/workflows/release.yml" target="_blank">📄 release.yml</a>
+        <p style="margin-bottom:14px">npm library — 18-job matrix (3 versions × 3 OS × 2 test types), staged publish with approval gate.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-lib-node" target="_blank">Repo</a>
+          <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-lib-node/actions" target="_blank">Actions</a>
+          <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-lib-node/blob/main/.github/workflows/ci.yml" target="_blank">ci.yml</a>
+          <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-lib-node/blob/main/.github/workflows/publish.yml" target="_blank">publish.yml</a>
         </div>
-        <div style="font-size:0.72rem;color:var(--text-muted);">Calls: <strong style="color:var(--gold);">reusable-matrix-ci</strong> + <strong style="color:var(--gold);">reusable-publish</strong> + <strong style="color:var(--gold);">reusable-release</strong> &nbsp; 💬 Slack on all</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══════ SLIDE 5: KEY CAPABILITIES VISUAL ═══════ -->
-<div class="slide" data-slide="4" data-part="1">
-  <span class="part-label">Part 1 — Overview</span>
+<!-- ══════════════════════════════════════════
+     SLIDE 5 — Key Capabilities
+     ══════════════════════════════════════════ -->
+<div class="slide" data-slide="4">
+  <span class="part">Part 1</span>
   <div class="content">
-    <h2>Key Capabilities Achieved</h2>
-    <p style="color:var(--text);margin-bottom:16px;">Every capability below was <strong class="gold">built and validated</strong> in the POC — not theoretical.</p>
+    <h2>Key Capabilities</h2>
+    <p class="section-desc">Every capability was <strong class="gold">built and validated</strong> in this POC.</p>
 
-    <div class="cap-grid">
-      <div class="cap-item ci">
-        <span class="cap-icon">🔄</span>
-        <div class="cap-text">
-          <h4>Centralized CI Pipelines</h4>
-          <p>One repo, 5 workflows, all languages.</p>
-          <div class="cap-detail">lint → test → scan → notify</div>
-          <span class="cap-check">✓ 3 apps + 1 library</span>
-        </div>
+    <div class="grid-3">
+      <div class="card card-sm" style="border-left:3px solid var(--gold)">
+        <h3>Centralized CI</h3>
+        <p>One repo, 5 workflows, 3 languages. lint → test → scan → notify.</p>
+        <p style="color:var(--green);font-size:.78rem;margin-top:6px">✓ All 4 repos</p>
       </div>
-      <div class="cap-item test">
-        <span class="cap-icon">🧪</span>
-        <div class="cap-text">
-          <h4>Multi-Stage Testing</h4>
-          <p>Sanity → Regression → Performance with real DB services.</p>
-          <div class="cap-detail">PostgreSQL 16 + Redis 7</div>
-          <span class="cap-check">✓ sample-app-python</span>
-        </div>
+      <div class="card card-sm" style="border-left:3px solid var(--green)">
+        <h3>Integration Testing</h3>
+        <p>Multi-stage with PostgreSQL 16 + Redis 7 service containers.</p>
+        <p style="color:var(--green);font-size:.78rem;margin-top:6px">✓ sample-app-python</p>
       </div>
-      <div class="cap-item security">
-        <span class="cap-icon">🔐</span>
-        <div class="cap-text">
-          <h4>Security Scanning</h4>
-          <p>SAST + dependency audit + Trivy container scan.</p>
-          <div class="cap-detail">bandit / eslint-security / gosec</div>
-          <span class="cap-check">✓ all repos</span>
-        </div>
+      <div class="card card-sm" style="border-left:3px solid var(--orange)">
+        <h3>Security Scanning</h3>
+        <p>Trivy + SAST + dependency audit on every CI run.</p>
+        <p style="color:var(--green);font-size:.78rem;margin-top:6px">✓ All repos</p>
       </div>
-      <div class="cap-item deploy">
-        <span class="cap-icon">🚀</span>
-        <div class="cap-text">
-          <h4>Staged Deployments</h4>
-          <p>Environment gates with manual approval for prod.</p>
-          <div class="cap-detail">staging → 🔒 approval → production</div>
-          <span class="cap-check">✓ integration-ci + publish</span>
-        </div>
+      <div class="card card-sm" style="border-left:3px solid var(--blue)">
+        <h3>Staged Deployments</h3>
+        <p>Environment gates with manual approval for production.</p>
+        <p style="color:var(--green);font-size:.78rem;margin-top:6px">✓ integration-ci + publish</p>
       </div>
-      <div class="cap-item matrix">
-        <span class="cap-icon">🖥️</span>
-        <div class="cap-text">
-          <h4>Cross-Platform Matrix</h4>
-          <p>Dynamic 3D: versions × OS × test types.</p>
-          <div class="cap-detail">3 × 3 × 2 = <strong class="gold">18 parallel jobs</strong></div>
-          <span class="cap-check">✓ sample-lib-node</span>
-        </div>
+      <div class="card card-sm" style="border-left:3px solid var(--purple)">
+        <h3>Cross-Platform Matrix</h3>
+        <p>3 Node versions × 3 OS × 2 test types = 18 parallel jobs.</p>
+        <p style="color:var(--green);font-size:.78rem;margin-top:6px">✓ sample-lib-node</p>
       </div>
-      <div class="cap-item observe">
-        <span class="cap-icon">📊</span>
-        <div class="cap-text">
-          <h4>Observability &amp; 💬 Slack</h4>
-          <p>Live dashboard + Slack alerts on every workflow.</p>
-          <div class="cap-detail">pass/fail/release notifications</div>
-          <span class="cap-check">✓ all repos + dashboard</span>
-        </div>
+      <div class="card card-sm" style="border-left:3px solid var(--gold-soft)">
+        <h3>Slack + Dashboard</h3>
+        <p>Slack alerts on every workflow. Live cross-repo health dashboard.</p>
+        <p style="color:var(--green);font-size:.78rem;margin-top:6px">✓ All repos</p>
       </div>
-      <div class="cap-item ci">
-        <span class="cap-icon">🐳</span>
-        <div class="cap-text">
-          <h4>Docker Build &amp; Cache</h4>
-          <p>BuildX + GHA layer cache for fast rebuilds.</p>
-          <div class="cap-detail">ghcr.io push + multi-tag</div>
-          <span class="cap-check">✓ sample-app-python</span>
-        </div>
+      <div class="card card-sm" style="border-left:3px solid var(--gold)">
+        <h3>Docker Build &amp; Cache</h3>
+        <p>BuildX with GHA layer cache for fast container builds.</p>
+        <p style="color:var(--green);font-size:.78rem;margin-top:6px">✓ sample-app-python</p>
       </div>
-      <div class="cap-item deploy">
-        <span class="cap-icon">📦</span>
-        <div class="cap-text">
-          <h4>Package Publishing</h4>
-          <p>Staged npm publish: @next → approval → @latest.</p>
-          <div class="cap-detail">OIDC token · no stored secrets</div>
-          <span class="cap-check">✓ sample-lib-node</span>
-        </div>
+      <div class="card card-sm" style="border-left:3px solid var(--green)">
+        <h3>Package Publishing</h3>
+        <p>Staged npm publish: @next → approval → @latest.</p>
+        <p style="color:var(--green);font-size:.78rem;margin-top:6px">✓ sample-lib-node</p>
       </div>
-      <div class="cap-item test">
-        <span class="cap-icon">🏷️</span>
-        <div class="cap-text">
-          <h4>Automated Releases</h4>
-          <p>Conventional commits → semver → changelog → release.</p>
-          <div class="cap-detail">Release Please + 💬 Slack</div>
-          <span class="cap-check">✓ all 4 repos</span>
-        </div>
+      <div class="card card-sm" style="border-left:3px solid var(--blue)">
+        <h3>Automated Releases</h3>
+        <p>Conventional commits → semver → changelog → GitHub Release.</p>
+        <p style="color:var(--green);font-size:.78rem;margin-top:6px">✓ All 4 repos</p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══════ SLIDE 6: PIPELINE FLOWS + SLACK + DEMO ═══════ -->
-<div class="slide" data-slide="5" data-part="1">
-  <span class="part-label">Part 1 — Overview</span>
+<!-- ══════════════════════════════════════════
+     SLIDE 6 — Pipeline Flows
+     ══════════════════════════════════════════ -->
+<div class="slide" data-slide="5">
+  <span class="part">Part 1</span>
   <div class="content">
     <h2>Workflow Pipeline Flows</h2>
-    <p style="color:var(--text);margin-bottom:14px;">Five reusable workflows — each with <strong class="gold">💬 Slack notifications</strong> on failure and success. Click to view source.</p>
+    <p class="section-desc">Five reusable workflows — each with Slack notifications. Click to view source.</p>
 
-    <div class="pipeline-visual">
-      <div class="pipeline-header">
-        <h4>⚡ Reusable CI — Standard Pipeline <span style="color:var(--text-muted);text-transform:none;letter-spacing:0;">(Python, Node, Go)</span></h4>
-        <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/blob/main/.github/workflows/reusable-ci.yml" target="_blank" style="font-size:0.62rem;">View Workflow →</a>
-      </div>
+    <div class="pipe-row">
+      <h4>
+        <span>Reusable CI <span style="color:var(--text-dim);text-transform:none;letter-spacing:0">— Python, Node, Go</span></span>
+        <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/blob/main/.github/workflows/reusable-ci.yml" target="_blank">Source →</a>
+      </h4>
       <div class="flow">
-        <div class="flow-step" style="border-color:var(--gold);">🔧 Setup<br/><small style="color:var(--text-muted)">Toolchain</small></div>
-        <span class="flow-arrow">→</span>
-        <div class="flow-parallel">
-          <div class="flow-step">🔍 Lint</div>
-          <div class="flow-step">🧪 Test + Coverage</div>
-          <div class="flow-step">🔐 Security Scan</div>
+        <div class="flow-step" style="border-color:var(--gold)">Setup</div>
+        <span class="flow-arr">→</span>
+        <div class="flow-group">
+          <div class="flow-step">Lint</div>
+          <div class="flow-step">Test + Coverage</div>
+          <div class="flow-step">Security Scan</div>
         </div>
-        <span class="flow-arrow">→</span>
-        <div class="flow-step">📋 CI Summary</div>
-        <span class="flow-arrow">→</span>
-        <div class="flow-step flow-slack" style="background:var(--green-dim);">💬 Slack<br/><small style="color:var(--green)">pass / fail</small></div>
+        <span class="flow-arr">→</span>
+        <div class="flow-step">PR Summary</div>
+        <span class="flow-arr">→</span>
+        <div class="flow-step flow-slack">Slack</div>
       </div>
     </div>
 
-    <div class="two-col" style="gap:10px;">
-      <div class="pipeline-visual">
-        <div class="pipeline-header">
-          <h4>🔬 Integration CI <span style="color:var(--text-muted);text-transform:none;letter-spacing:0;">(Python)</span></h4>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/blob/main/.github/workflows/reusable-integration-ci.yml" target="_blank" style="font-size:0.62rem;">View →</a>
-        </div>
-        <div class="flow" style="flex-wrap:wrap;">
-          <div class="flow-parallel">
-            <div class="flow-step">Sanity <small style="color:var(--text-muted)">PG+Redis</small></div>
-            <div class="flow-step">Regression <small style="color:var(--text-muted)">3 ver</small></div>
-            <div class="flow-step">Performance</div>
+    <div class="grid-2" style="gap:12px">
+      <div class="pipe-row" style="margin:0">
+        <h4>
+          <span>Integration CI <span style="color:var(--text-dim);text-transform:none;letter-spacing:0">— Python</span></span>
+          <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/blob/main/.github/workflows/reusable-integration-ci.yml" target="_blank" style="font-size:.62rem">Source →</a>
+        </h4>
+        <div class="flow">
+          <div class="flow-group">
+            <div class="flow-step">Sanity</div>
+            <div class="flow-step">Regression</div>
+            <div class="flow-step">Perf</div>
           </div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-step">🐳 Docker</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-step" style="border-color:var(--gold);">Staging</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-step" style="border-color:var(--green);">Prod <small style="color:var(--green)">🔒</small></div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-step flow-slack" style="background:var(--green-dim);min-width:auto;">💬</div>
+          <span class="flow-arr">→</span>
+          <div class="flow-step">Docker</div>
+          <span class="flow-arr">→</span>
+          <div class="flow-step" style="border-color:var(--gold)">Staging</div>
+          <span class="flow-arr">→</span>
+          <div class="flow-step" style="border-color:var(--green)">Prod</div>
+          <span class="flow-arr">→</span>
+          <div class="flow-step flow-slack">Slack</div>
         </div>
       </div>
 
-      <div class="pipeline-visual">
-        <div class="pipeline-header">
-          <h4>📦 Matrix CI <span style="color:var(--text-muted);text-transform:none;letter-spacing:0;">(Node Lib)</span></h4>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/blob/main/.github/workflows/reusable-matrix-ci.yml" target="_blank" style="font-size:0.62rem;">View →</a>
-        </div>
-        <div class="flow" style="flex-wrap:wrap;">
-          <div class="flow-step">🔍 Lint</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-parallel">
-            <div class="flow-step">v18 × ubuntu × unit</div>
-            <div class="flow-step">v20 × macos × integ</div>
-            <div class="flow-step" style="color:var(--text-muted);font-style:italic;">… 18 jobs</div>
+      <div class="pipe-row" style="margin:0">
+        <h4>
+          <span>Matrix CI <span style="color:var(--text-dim);text-transform:none;letter-spacing:0">— Node Library</span></span>
+          <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/blob/main/.github/workflows/reusable-matrix-ci.yml" target="_blank" style="font-size:.62rem">Source →</a>
+        </h4>
+        <div class="flow">
+          <div class="flow-step">Lint</div>
+          <span class="flow-arr">→</span>
+          <div class="flow-group">
+            <div class="flow-step">18 × 20 × 22</div>
+            <div class="flow-step">3 OS × 2 types</div>
           </div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-step">📋 Summary</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-step flow-slack" style="background:var(--green-dim);min-width:auto;">💬</div>
+          <span class="flow-arr">→</span>
+          <div class="flow-step">Summary</div>
+          <span class="flow-arr">→</span>
+          <div class="flow-step flow-slack">Slack</div>
         </div>
       </div>
     </div>
 
-    <div class="two-col" style="gap:10px;margin-top:10px;">
-      <div class="pipeline-visual">
-        <div class="pipeline-header">
-          <h4>🚀 Publish <span style="color:var(--text-muted);text-transform:none;letter-spacing:0;">(npm)</span></h4>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/blob/main/.github/workflows/reusable-publish.yml" target="_blank" style="font-size:0.62rem;">View →</a>
-        </div>
+    <div class="grid-2" style="gap:12px;margin-top:12px">
+      <div class="pipe-row" style="margin:0">
+        <h4>
+          <span>Publish <span style="color:var(--text-dim);text-transform:none;letter-spacing:0">— npm</span></span>
+          <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/blob/main/.github/workflows/reusable-publish.yml" target="_blank" style="font-size:.62rem">Source →</a>
+        </h4>
         <div class="flow">
-          <div class="flow-step">📦 Build</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-step" style="border-color:var(--gold);">@next<small style="color:var(--gold);display:block;">staging</small></div>
-          <span class="flow-arrow">→ 🔒 →</span>
-          <div class="flow-step" style="border-color:var(--green);">@latest<small style="color:var(--green);display:block;">production</small></div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-step flow-slack" style="background:var(--green-dim);min-width:auto;">💬</div>
+          <div class="flow-step">Build</div>
+          <span class="flow-arr">→</span>
+          <div class="flow-step" style="border-color:var(--gold)">@next</div>
+          <span class="flow-arr">→ 🔒 →</span>
+          <div class="flow-step" style="border-color:var(--green)">@latest</div>
+          <span class="flow-arr">→</span>
+          <div class="flow-step flow-slack">Slack</div>
         </div>
       </div>
 
-      <div class="pipeline-visual">
-        <div class="pipeline-header">
-          <h4>🏷️ Release <span style="color:var(--text-muted);text-transform:none;letter-spacing:0;">(All repos)</span></h4>
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/blob/main/.github/workflows/reusable-release.yml" target="_blank" style="font-size:0.62rem;">View →</a>
-        </div>
+      <div class="pipe-row" style="margin:0">
+        <h4>
+          <span>Release <span style="color:var(--text-dim);text-transform:none;letter-spacing:0">— All repos</span></span>
+          <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/blob/main/.github/workflows/reusable-release.yml" target="_blank" style="font-size:.62rem">Source →</a>
+        </h4>
         <div class="flow">
-          <div class="flow-step">📝 Commits</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-step" style="border-color:var(--gold);">Release Please</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-step">📋 Changelog</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-step" style="border-color:var(--green);">GitHub Release</div>
-          <span class="flow-arrow">→</span>
-          <div class="flow-step flow-slack" style="background:var(--green-dim);min-width:auto;">💬</div>
+          <div class="flow-step">Commits</div>
+          <span class="flow-arr">→</span>
+          <div class="flow-step" style="border-color:var(--gold)">Release Please</div>
+          <span class="flow-arr">→</span>
+          <div class="flow-step">Changelog</div>
+          <span class="flow-arr">→</span>
+          <div class="flow-step flow-slack">Slack</div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══════ SLIDE 7: POC ACHIEVEMENTS TABLE ═══════ -->
-<div class="slide" data-slide="6" data-part="1">
-  <span class="part-label">Part 1 — Overview</span>
+<!-- ══════════════════════════════════════════
+     SLIDE 7 — POC Achievements
+     ══════════════════════════════════════════ -->
+<div class="slide" data-slide="6">
+  <span class="part">Part 1</span>
   <div class="content">
     <h2>POC Achievements</h2>
-    <div class="four-col" style="margin-bottom:20px;">
-      <div class="card" style="text-align:center;">
-        <span class="big-number">5</span>
-        <div class="big-label">Reusable Workflows</div>
-      </div>
-      <div class="card" style="text-align:center;">
-        <span class="big-number">4</span>
-        <div class="big-label">Consumer Repos</div>
-      </div>
-      <div class="card" style="text-align:center;">
-        <span class="big-number">3</span>
-        <div class="big-label">Languages</div>
-      </div>
-      <div class="card" style="text-align:center;">
-        <span class="big-number">2</span>
-        <div class="big-label">Composite Actions</div>
-      </div>
+
+    <div class="grid-4" style="margin-bottom:28px">
+      <div class="card stat"><span class="stat-num">5</span><div class="stat-label">Workflows</div></div>
+      <div class="card stat"><span class="stat-num">4</span><div class="stat-label">Consumer Repos</div></div>
+      <div class="card stat"><span class="stat-num">3</span><div class="stat-label">Languages</div></div>
+      <div class="card stat"><span class="stat-num">2</span><div class="stat-label">Composite Actions</div></div>
     </div>
-    <table class="achievements-table">
-      <thead>
-        <tr><th>Component</th><th>What Was Built</th><th>Coverage</th><th>💬</th><th>Status</th></tr>
-      </thead>
+
+    <table>
+      <thead><tr><th>Component</th><th>What Was Built</th><th>Coverage</th><th>Status</th></tr></thead>
       <tbody>
-        <tr><td class="component">Reusable CI</td><td>Lint → Test → Security → PR Summary</td><td>Python, Node, Go</td><td>✓</td><td><span class="status-badge">✓ Done</span></td></tr>
-        <tr><td class="component">Matrix CI</td><td>3D matrix: 3 ver × 3 OS × 2 test types = 18 jobs</td><td>Node.js Library</td><td>✓</td><td><span class="status-badge">✓ Done</span></td></tr>
-        <tr><td class="component">Integration CI</td><td>Service containers → Docker → Staged deploy</td><td>Python App</td><td>✓</td><td><span class="status-badge">✓ Done</span></td></tr>
-        <tr><td class="component">Package Publish</td><td>Staging @next → Approval → Production @latest</td><td>Node.js Library</td><td>✓</td><td><span class="status-badge">✓ Done</span></td></tr>
-        <tr><td class="component">Automated Release</td><td>Conventional commits → semver → changelog → GH Release</td><td>All 4 repos</td><td>✓</td><td><span class="status-badge">✓ Done</span></td></tr>
-        <tr><td class="component">Composite Actions</td><td>setup-toolchain (3 langs + caching) + slack-notify</td><td>All workflows</td><td>✓</td><td><span class="status-badge">✓ Done</span></td></tr>
-        <tr><td class="component">Live Dashboard</td><td>Cross-repo health, build insights, GitHub Pages</td><td>All 4 repos</td><td>—</td><td><span class="status-badge">✓ Done</span></td></tr>
+        <tr><td style="color:var(--white);font-weight:600">Reusable CI</td><td>Lint → Test → Security → PR Summary → Slack</td><td>Python, Node, Go</td><td><span class="badge b-green">Done</span></td></tr>
+        <tr><td style="color:var(--white);font-weight:600">Matrix CI</td><td>3 versions × 3 OS × 2 test types = 18 jobs</td><td>Node.js Library</td><td><span class="badge b-green">Done</span></td></tr>
+        <tr><td style="color:var(--white);font-weight:600">Integration CI</td><td>Service containers → Docker → Staged deploy → Slack</td><td>Python App</td><td><span class="badge b-green">Done</span></td></tr>
+        <tr><td style="color:var(--white);font-weight:600">Package Publish</td><td>Staging @next → Approval → Production @latest → Slack</td><td>Node.js Library</td><td><span class="badge b-green">Done</span></td></tr>
+        <tr><td style="color:var(--white);font-weight:600">Automated Release</td><td>Conventional commits → semver → changelog → GH Release</td><td>All 4 repos</td><td><span class="badge b-green">Done</span></td></tr>
+        <tr><td style="color:var(--white);font-weight:600">Composite Actions</td><td>setup-toolchain (3 langs) + slack-notify</td><td>All workflows</td><td><span class="badge b-green">Done</span></td></tr>
+        <tr><td style="color:var(--white);font-weight:600">Live Dashboard</td><td>Cross-repo health metrics on GitHub Pages</td><td>All 4 repos</td><td><span class="badge b-green">Done</span></td></tr>
       </tbody>
     </table>
   </div>
 </div>
 
-<!-- ═══════ SLIDE 8: HOW REPOS ADOPT ═══════ -->
-<div class="slide" data-slide="7" data-part="1">
-  <span class="part-label">Part 1 — Overview</span>
+<!-- ══════════════════════════════════════════
+     SLIDE 8 — How Repos Adopt
+     ══════════════════════════════════════════ -->
+<div class="slide" data-slide="7">
+  <span class="part">Part 1</span>
   <div class="content">
     <h2>How Repos Adopt Shared Workflows</h2>
-    <div class="two-col">
+
+    <div class="grid-2">
       <div>
-        <h3 style="margin-bottom:12px;">A consumer repo adds <span class="gold">~15 lines</span></h3>
-        <pre><span style="color:var(--text-muted)"># .github/workflows/ci.yml</span>
+        <h3 style="margin-bottom:14px">Consumer adds <span class="gold">~15 lines</span></h3>
+        <pre><span style="color:var(--text-dim)"># .github/workflows/ci.yml</span>
 <span style="color:var(--gold)">name:</span> CI
 <span style="color:var(--gold)">on:</span> [push, pull_request]
 
@@ -787,368 +610,329 @@ ul.features li::before { content: "▸"; position: absolute; left: 0; color: var
       <span style="color:var(--green)">SLACK_WEBHOOK_URL:</span> ${{ secrets... }}</pre>
       </div>
       <div>
-        <h3 style="margin-bottom:12px;">What runs automatically</h3>
-        <div class="card" style="margin-bottom:8px;">
-          <div class="highlight-bar"><strong class="green">✓</strong> <strong>Lint</strong> — flake8 / ESLint / golangci-lint</div>
+        <h3 style="margin-bottom:14px">What runs automatically</h3>
+        <div class="card card-sm" style="margin-bottom:10px">
+          <div style="border-left:3px solid var(--gold);padding-left:12px"><strong class="green">✓</strong> <strong>Lint</strong> — flake8 / ESLint / golangci-lint</div>
         </div>
-        <div class="card" style="margin-bottom:8px;">
-          <div class="highlight-bar"><strong class="green">✓</strong> <strong>Test</strong> — pytest / jest / go test + coverage</div>
+        <div class="card card-sm" style="margin-bottom:10px">
+          <div style="border-left:3px solid var(--gold);padding-left:12px"><strong class="green">✓</strong> <strong>Test</strong> — pytest / jest / go test + coverage</div>
         </div>
-        <div class="card" style="margin-bottom:8px;">
-          <div class="highlight-bar"><strong class="green">✓</strong> <strong>Security Scan</strong> — Trivy + SAST + dep audit</div>
+        <div class="card card-sm" style="margin-bottom:10px">
+          <div style="border-left:3px solid var(--gold);padding-left:12px"><strong class="green">✓</strong> <strong>Security</strong> — Trivy + SAST + dep audit</div>
         </div>
-        <div class="card" style="margin-bottom:8px;">
-          <div class="highlight-bar"><strong class="green">✓</strong> <strong>💬 Slack</strong> — Color-coded pass/fail alerts</div>
+        <div class="card card-sm" style="margin-bottom:10px">
+          <div style="border-left:3px solid var(--gold);padding-left:12px"><strong class="green">✓</strong> <strong>Slack</strong> — Color-coded pass/fail alerts</div>
         </div>
-        <div class="card" style="margin-bottom:8px;">
-          <div class="highlight-bar"><strong class="green">✓</strong> <strong>PR Summary</strong> — Rich CI results table</div>
+        <div class="card card-sm" style="margin-bottom:10px">
+          <div style="border-left:3px solid var(--gold);padding-left:12px"><strong class="green">✓</strong> <strong>PR Summary</strong> — Rich CI results table</div>
         </div>
-        <div class="card" style="text-align:center;background:var(--navy-light);margin-top:12px;">
-          <p style="color:var(--text);font-size:0.9rem;">Zero pipeline code in app repos.<br/>All logic in the shared repo.</p>
+        <div class="card" style="text-align:center;background:var(--bg-panel);margin-top:16px">
+          <p style="color:var(--white);font-size:.88rem">Zero pipeline code in app repos.<br>All logic lives in the shared repo.</p>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══════ SLIDE 9: WHAT THIS POC DEMONSTRATES ═══════ -->
-<div class="slide" data-slide="8" data-part="1">
-  <span class="part-label">Part 1 — Overview</span>
+<!-- ══════════════════════════════════════════
+     SLIDE 9 — What This Demonstrates
+     ══════════════════════════════════════════ -->
+<div class="slide" data-slide="8">
+  <span class="part">Part 1</span>
   <div class="content">
     <h2>What This POC Demonstrates</h2>
-    <div class="two-col">
-      <div>
-        <div class="card card-gold" style="margin-bottom:14px;">
-          <h3>🎯 Hands-on GHA Expertise</h3>
-          <p style="color:var(--text);">Built and validated production-grade patterns.</p>
-          <ul class="features" style="margin-top:10px;">
-            <li>Reusable workflow design &amp; parameterization</li>
-            <li>Composite action development</li>
-            <li>Dynamic matrix via <span class="inline-code">fromJSON()</span></li>
-            <li>Service containers for integration testing</li>
-            <li>Environment protection &amp; approval gates</li>
-            <li>💬 Slack integration across all workflows</li>
-          </ul>
-        </div>
+
+    <div class="grid-2" style="margin-bottom:24px">
+      <div class="card card-accent">
+        <h3>Hands-on GHA Expertise</h3>
+        <p style="margin-bottom:10px;color:var(--white)">Built and validated production-grade patterns.</p>
+        <ul class="feat">
+          <li>Reusable workflow design &amp; parameterization</li>
+          <li>Composite action development</li>
+          <li>Dynamic matrix via <code>fromJSON()</code></li>
+          <li>Service containers for integration testing</li>
+          <li>Environment protection &amp; approval gates</li>
+          <li>Slack integration across all workflows</li>
+        </ul>
       </div>
-      <div>
-        <div class="card card-gold" style="margin-bottom:14px;">
-          <h3>🚀 Ready for Real Workloads</h3>
-          <p style="color:var(--text);">Patterns translate directly to production use.</p>
-          <ul class="features" style="margin-top:10px;">
-            <li>New GHA workflow creation from scratch</li>
-            <li>Centralized governance for organizations</li>
-            <li>OIDC-based cloud auth (AWS/GCP/Azure)</li>
-            <li>Docker build, publish, and deploy pipelines</li>
-            <li>Existing pipeline modernization</li>
-            <li>Cross-repo CI/CD observability</li>
-          </ul>
-        </div>
+      <div class="card card-accent">
+        <h3>Ready for Real Workloads</h3>
+        <p style="margin-bottom:10px;color:var(--white)">Patterns translate directly to production use.</p>
+        <ul class="feat">
+          <li>New GHA workflow creation from scratch</li>
+          <li>Centralized governance for organizations</li>
+          <li>Docker build, publish, and deploy pipelines</li>
+          <li>Multi-language &amp; multi-platform CI</li>
+          <li>Automated release management</li>
+          <li>Cross-repo CI/CD observability</li>
+        </ul>
       </div>
     </div>
-    <div class="card" style="text-align:center;margin-top:16px;background:var(--navy-light);border-color:var(--gold);">
-      <p style="color:var(--text);font-size:1.05rem;">
-        <strong class="gold">Bottom line:</strong> We're equipped to build, optimize, or take on any CI/CD workflow in GitHub Actions.
-      </p>
+
+    <div class="card" style="text-align:center;border-color:var(--gold);background:var(--bg-panel)">
+      <p style="color:var(--white);font-size:1rem"><strong class="gold">Bottom line:</strong> Equipped to build, optimize, or take on any CI/CD workflow in GitHub Actions.</p>
     </div>
   </div>
 </div>
 
-<!-- ╔══════════════════════════════════════════════════════════╗
-     ║  DIVIDER — PART 2                                       ║
-     ╚══════════════════════════════════════════════════════════╝ -->
-
-<div class="slide divider-slide" data-slide="9" data-part="divider">
+<!-- ══════════════════════════════════════════
+     DIVIDER
+     ══════════════════════════════════════════ -->
+<div class="slide divider" data-slide="9">
   <div class="content">
-    <p style="font-size:0.85rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--text-muted);margin-bottom:12px;">Part 2</p>
+    <p style="font-size:.78rem;text-transform:uppercase;letter-spacing:.14em;color:var(--text-dim);margin-bottom:10px">Part 2</p>
     <h1>Technical Deep Dive</h1>
     <div class="divider-line"></div>
-    <p class="subtitle" style="max-width:600px;margin:0 auto;">Architecture internals, workflow details, advanced patterns, and live dashboard.</p>
-    <p style="margin-top:24px;font-size:0.9rem;color:var(--text-muted);">Navigate forward for details, or press <strong style="color:var(--gold)">Home</strong> to return to overview.</p>
+    <p class="subtitle" style="max-width:520px;margin:0 auto">Architecture, workflow details, and advanced patterns.</p>
   </div>
 </div>
 
-<!-- ╔══════════════════════════════════════════════════════════╗
-     ║  PART 2 — TECHNICAL DETAILS  (Slides 11–16)            ║
-     ╚══════════════════════════════════════════════════════════╝ -->
-
-<!-- ═══════ SLIDE 11: ARCHITECTURE ═══════ -->
-<div class="slide" data-slide="10" data-part="2">
-  <span class="part-label">Part 2 — Details</span>
+<!-- ══════════════════════════════════════════
+     SLIDE 11 — Architecture (SVG)
+     ══════════════════════════════════════════ -->
+<div class="slide" data-slide="10">
+  <span class="part">Part 2</span>
   <div class="content">
-    <h2>Architecture — Hub &amp; Spoke Detail</h2>
-    <div class="diagram">                     github-shared-workflows (Hub)
-     ┌──────────────────────────────────────────────────────────┐
-     │  Workflows:                    Actions:                  │
-     │  ├─ reusable-ci.yml            ├─ setup-toolchain/       │
-     │  ├─ reusable-matrix-ci.yml     └─ slack-notify/          │
-     │  ├─ reusable-integration-ci                              │
-     │  ├─ reusable-publish.yml       Dashboard:                │
-     │  └─ reusable-release.yml       └─ GitHub Pages (live)    │
-     └──────────┬──────────┬──────────┬──────────┬──────────────┘
-                │          │          │          │
-         workflow_call  workflow_call  wf_call  wf_call
-                │          │          │          │
-           ┌────▼───┐ ┌────▼───┐ ┌───▼────┐ ┌───▼────────┐
-           │ Python │ │ Node   │ │ Go     │ │ Node Lib   │
-           │ App    │ │ App    │ │ App    │ │ (npm pkg)  │
-           │CI+Intg │ │CI+Rel  │ │CI+Rel  │ │Matrix+Pub  │
-           │+Rel    │ │        │ │        │ │+Rel        │
-           │ 💬     │ │ 💬     │ │ 💬     │ │ 💬         │
-           └────────┘ └────────┘ └────────┘ └────────────┘</div>
-    <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
-      <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/tree/main/.github/workflows" target="_blank">📂 Hub Workflows</a>
-      <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/tree/main/actions" target="_blank">📂 Composite Actions</a>
-      <a class="demo-link green" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/actions" target="_blank">▶ Hub Actions Tab</a>
+    <h2>Architecture</h2>
+    <p class="section-desc">Hub & spoke with composite actions, Slack alerts, and a live dashboard.</p>
+
+    <svg class="diagram-svg" viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg">
+      <!-- Hub box -->
+      <rect class="hub-rect" x="150" y="10" width="500" height="100"/>
+      <text class="label-white" x="400" y="40" font-size="14" text-anchor="middle">github-shared-workflows</text>
+      <!-- Workflow row -->
+      <text class="label-gold" x="185" y="65" font-size="10">reusable-ci</text>
+      <text class="label-gold" x="285" y="65" font-size="10">matrix-ci</text>
+      <text class="label-gold" x="375" y="65" font-size="10">integration-ci</text>
+      <text class="label-gold" x="485" y="65" font-size="10">publish</text>
+      <text class="label-gold" x="555" y="65" font-size="10">release</text>
+      <!-- Actions row -->
+      <text x="185" y="88" font-size="10" fill="var(--green)" font-weight="500">setup-toolchain</text>
+      <text x="315" y="88" font-size="10" fill="var(--green)" font-weight="500">slack-notify</text>
+      <text x="435" y="88" font-size="10" fill="var(--text-dim)">+ dashboard (GitHub Pages)</text>
+
+      <!-- Connector trunk -->
+      <line class="connector" x1="400" y1="110" x2="400" y2="155"/>
+      <!-- Horizontal -->
+      <line class="connector" x1="100" y1="155" x2="700" y2="155"/>
+      <!-- Drops + arrows -->
+      <line class="connector" x1="100" y1="155" x2="100" y2="185"/>
+      <line class="connector" x1="300" y1="155" x2="300" y2="185"/>
+      <line class="connector" x1="500" y1="155" x2="500" y2="185"/>
+      <line class="connector" x1="700" y1="155" x2="700" y2="185"/>
+      <polygon class="connector-dot" points="100,190 95,182 105,182"/>
+      <polygon class="connector-dot" points="300,190 295,182 305,182"/>
+      <polygon class="connector-dot" points="500,190 495,182 505,182"/>
+      <polygon class="connector-dot" points="700,190 695,182 705,182"/>
+
+      <!-- Consumer boxes -->
+      <rect class="spoke-rect" x="30" y="195" width="140" height="80"/>
+      <text class="label-white" x="100" y="220" font-size="11" text-anchor="middle">Python App</text>
+      <text class="label-dim" x="100" y="240" text-anchor="middle">CI + Integration + Rel</text>
+      <text x="100" y="260" font-size="10" text-anchor="middle" fill="var(--green)">Slack ✓</text>
+
+      <rect class="spoke-rect" x="230" y="195" width="140" height="80"/>
+      <text class="label-white" x="300" y="220" font-size="11" text-anchor="middle">Node App</text>
+      <text class="label-dim" x="300" y="240" text-anchor="middle">CI + Release</text>
+      <text x="300" y="260" font-size="10" text-anchor="middle" fill="var(--green)">Slack ✓</text>
+
+      <rect class="spoke-rect" x="430" y="195" width="140" height="80"/>
+      <text class="label-white" x="500" y="220" font-size="11" text-anchor="middle">Go App</text>
+      <text class="label-dim" x="500" y="240" text-anchor="middle">CI + Release</text>
+      <text x="500" y="260" font-size="10" text-anchor="middle" fill="var(--green)">Slack ✓</text>
+
+      <rect class="spoke-rect" x="630" y="195" width="140" height="80"/>
+      <text class="label-white" x="700" y="220" font-size="11" text-anchor="middle">Node Library</text>
+      <text class="label-dim" x="700" y="240" text-anchor="middle">Matrix + Pub + Rel</text>
+      <text x="700" y="260" font-size="10" text-anchor="middle" fill="var(--green)">Slack ✓</text>
+    </svg>
+
+    <div style="display:flex;gap:10px;margin-top:16px;justify-content:center">
+      <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/tree/main/.github/workflows" target="_blank">Hub Workflows</a>
+      <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/tree/main/actions" target="_blank">Composite Actions</a>
+      <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/actions" target="_blank">Actions Tab</a>
     </div>
   </div>
 </div>
 
-<!-- ═══════ SLIDE 12: WORKFLOW CATALOG ═══════ -->
-<div class="slide" data-slide="11" data-part="2">
-  <span class="part-label">Part 2 — Details</span>
+<!-- ══════════════════════════════════════════
+     SLIDE 12 — Integration CI Deep Dive
+     ══════════════════════════════════════════ -->
+<div class="slide" data-slide="11">
+  <span class="part">Part 2</span>
   <div class="content">
-    <h2>Workflow Catalog</h2>
-    <table>
-      <thead><tr><th>Workflow</th><th>What It Does</th><th>Consumer Repos</th><th>💬</th><th>Status</th></tr></thead>
-      <tbody>
-        <tr><td style="color:var(--text)">reusable-ci.yml</td><td>Lint → Test → Security → PR Summary</td><td>Python, Node, Go apps</td><td>✓</td><td><span class="badge badge-green">Active</span></td></tr>
-        <tr><td style="color:var(--text)">reusable-matrix-ci.yml</td><td>N versions × M OSes × K test types</td><td>sample-lib-node</td><td>✓</td><td><span class="badge badge-green">Active</span></td></tr>
-        <tr><td style="color:var(--text)">reusable-integration-ci.yml</td><td>Services + Docker + Staged deploy</td><td>sample-app-python</td><td>✓</td><td><span class="badge badge-green">Active</span></td></tr>
-        <tr><td style="color:var(--text)">reusable-publish.yml</td><td>Staging → Production with approvals</td><td>sample-lib-node</td><td>✓</td><td><span class="badge badge-green">Active</span></td></tr>
-        <tr><td style="color:var(--text)">reusable-release.yml</td><td>Conventional commits → Semver → GH Release</td><td>All 4 repos</td><td>✓</td><td><span class="badge badge-green">Active</span></td></tr>
-      </tbody>
-    </table>
-    <div style="margin-top:18px;">
-      <div class="two-col">
-        <div class="card">
-          <h3>Composite Actions</h3>
-          <ul class="features">
-            <li><strong>setup-toolchain</strong> — Python/Node/Go setup + dependency caching</li>
-            <li><strong>slack-notify</strong> — Color-coded Slack alerts (success 🟢 / failure 🔴 / release 🔵)</li>
-          </ul>
-        </div>
-        <div class="card">
-          <h3>Language Detection</h3>
-          <p>One workflow handles all languages. The <span class="inline-code">language</span> input drives tool setup, lint, test runner, and cache strategy automatically.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+    <h2>Integration CI — Deep Dive</h2>
+    <p class="section-desc">sample-app-python: multi-stage with database services, Docker build, staged deployment.</p>
 
-<!-- ═══════ SLIDE 13: INTEGRATION CI DEEP DIVE ═══════ -->
-<div class="slide" data-slide="12" data-part="2">
-  <span class="part-label">Part 2 — Details</span>
-  <div class="content">
-    <h2>Integration CI — Full Pipeline</h2>
-    <p style="color:var(--text);margin-bottom:14px;">sample-app-python: multi-stage with database services, Docker build, staged deployment, and 💬 Slack notifications.</p>
-    <div class="flow" style="margin-bottom:18px;">
-      <div class="flow-step"><strong>Sanity</strong><br/><small style="color:var(--text-muted)">PG + Redis</small></div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-step"><strong>Regression</strong><br/><small style="color:var(--text-muted)">3 versions</small></div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-step"><strong>Perf</strong><br/><small style="color:var(--text-muted)">Load test</small></div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-step"><strong>Docker</strong><br/><small style="color:var(--text-muted)">Build+Push</small></div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-step" style="border-color:var(--gold);"><strong>Staging</strong><br/><small style="color:var(--gold)">auto</small></div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-step" style="border-color:var(--green);"><strong>Prod</strong><br/><small style="color:var(--green)">🔒 approval</small></div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-step flow-slack" style="background:var(--green-dim);"><strong>💬</strong><br/><small style="color:var(--green)">Slack</small></div>
+    <div class="flow" style="margin-bottom:24px;justify-content:center">
+      <div class="flow-step"><strong>Sanity</strong><br><small style="color:var(--text-dim)">PG + Redis</small></div>
+      <span class="flow-arr">→</span>
+      <div class="flow-step"><strong>Regression</strong><br><small style="color:var(--text-dim)">3 versions</small></div>
+      <span class="flow-arr">→</span>
+      <div class="flow-step"><strong>Perf</strong></div>
+      <span class="flow-arr">→</span>
+      <div class="flow-step"><strong>Docker</strong></div>
+      <span class="flow-arr">→</span>
+      <div class="flow-step" style="border-color:var(--gold)"><strong>Staging</strong></div>
+      <span class="flow-arr">→</span>
+      <div class="flow-step" style="border-color:var(--green)"><strong>Prod</strong> <small style="color:var(--green)">🔒</small></div>
+      <span class="flow-arr">→</span>
+      <div class="flow-step flow-slack"><strong>Slack</strong></div>
     </div>
-    <div class="two-col">
+
+    <div class="grid-2">
       <div class="card">
         <h3>Service Containers</h3>
-        <pre style="font-size:0.75rem;"><span style="color:var(--gold)">services:</span>
+        <pre><span style="color:var(--gold)">services:</span>
   <span style="color:var(--green)">postgres:</span>
-    <span style="color:var(--green)">image:</span> postgres:16
-    <span style="color:var(--green)">ports:</span> ["5432:5432"]
-    <span style="color:var(--green)">options:</span> --health-cmd pg_isready
+    image: postgres:16
+    ports: ["5432:5432"]
+    options: --health-cmd pg_isready
   <span style="color:var(--green)">redis:</span>
-    <span style="color:var(--green)">image:</span> redis:7-alpine
-    <span style="color:var(--green)">ports:</span> ["6379:6379"]</pre>
+    image: redis:7-alpine
+    ports: ["6379:6379"]</pre>
       </div>
       <div class="card">
-        <h3>Docker Build with Layer Cache</h3>
-        <pre style="font-size:0.75rem;"><span style="color:var(--gold)">- uses:</span> docker/build-push-action@v5
+        <h3>Docker Build + Cache</h3>
+        <pre><span style="color:var(--gold)">- uses:</span> docker/build-push-action@v5
   <span style="color:var(--gold)">with:</span>
-    <span style="color:var(--green)">push:</span> true
-    <span style="color:var(--green)">tags:</span> ghcr.io/org/app:${{ sha }}
-    <span style="color:var(--green)">cache-from:</span> type=gha
-    <span style="color:var(--green)">cache-to:</span> type=gha,mode=max</pre>
+    push: true
+    tags: ghcr.io/org/app:${{ sha }}
+    cache-from: type=gha
+    cache-to: type=gha,mode=max</pre>
       </div>
     </div>
-    <div style="margin-top:10px;display:flex;gap:8px;">
-      <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/blob/main/.github/workflows/reusable-integration-ci.yml" target="_blank">📄 Workflow Source</a>
-      <a class="demo-link green" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-python/actions" target="_blank">▶ Demo: Python Actions</a>
+
+    <div style="margin-top:14px;display:flex;gap:8px;justify-content:center">
+      <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/blob/main/.github/workflows/reusable-integration-ci.yml" target="_blank">Workflow Source</a>
+      <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-python/actions" target="_blank">Python Actions</a>
     </div>
   </div>
 </div>
 
-<!-- ═══════ SLIDE 14: MATRIX + PUBLISH ═══════ -->
-<div class="slide" data-slide="13" data-part="2">
-  <span class="part-label">Part 2 — Details</span>
+<!-- ══════════════════════════════════════════
+     SLIDE 13 — Matrix + Publish
+     ══════════════════════════════════════════ -->
+<div class="slide" data-slide="12">
+  <span class="part">Part 2</span>
   <div class="content">
     <h2>Matrix CI + Package Publishing</h2>
-    <div class="two-col">
+
+    <div class="grid-2">
       <div>
         <h3>Dynamic Matrix — <span class="gold">18 Parallel Jobs</span></h3>
-        <p style="margin-bottom:12px;">Consumer passes axes as JSON; workflow expands via <span class="inline-code">fromJSON()</span>.</p>
-        <table style="font-size:0.85rem;">
+        <p style="margin-bottom:16px">Consumer passes axes as JSON; workflow expands via <code>fromJSON()</code>.</p>
+        <table style="font-size:.84rem;margin-bottom:16px">
           <thead><tr><th>Axis</th><th>Values</th></tr></thead>
           <tbody>
-            <tr><td style="color:var(--text)">Node.js</td><td>18, 20, 22</td></tr>
-            <tr><td style="color:var(--text)">OS</td><td>Ubuntu, macOS, Windows</td></tr>
-            <tr><td style="color:var(--text)">Test Type</td><td>Unit, Integration</td></tr>
+            <tr><td style="color:var(--white)">Node.js</td><td>18, 20, 22</td></tr>
+            <tr><td style="color:var(--white)">OS</td><td>Ubuntu, macOS, Windows</td></tr>
+            <tr><td style="color:var(--white)">Test Type</td><td>Unit, Integration</td></tr>
           </tbody>
         </table>
-        <pre style="margin-top:12px;font-size:0.72rem;"><span style="color:var(--gold)">with:</span>
-  <span style="color:var(--green)">language_versions:</span> '["18","20","22"]'
-  <span style="color:var(--green)">os_matrix:</span> '["ubuntu-latest",
+        <pre style="font-size:.72rem"><span style="color:var(--gold)">with:</span>
+  language_versions: '["18","20","22"]'
+  os_matrix: '["ubuntu-latest",
                "macos-latest",
                "windows-latest"]'
-  <span style="color:var(--green)">test_types:</span> '["unit","integration"]'</pre>
-        <div style="margin-top:8px;">
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-lib-node/actions" target="_blank" style="font-size:0.62rem;">▶ Demo: Matrix Runs</a>
-        </div>
+  test_types: '["unit","integration"]'</pre>
       </div>
       <div>
         <h3>Staged Package Publishing</h3>
-        <p style="margin-bottom:12px;">Two-stage publish with approval gate. 💬 Slack on completion.</p>
-        <div class="flow" style="flex-direction:column;align-items:stretch;gap:6px;">
-          <div class="flow-step" style="width:100%;"><strong>Build &amp; Test</strong><br/><small style="color:var(--text-muted)">Type-check + Unit + Integration</small></div>
-          <div style="text-align:center;"><span class="flow-arrow">↓</span></div>
-          <div class="flow-step" style="width:100%;border-color:var(--gold);"><strong>Publish to Staging</strong><br/><small style="color:var(--gold)">npm publish --tag next</small></div>
-          <div style="text-align:center;"><span class="flow-arrow">↓ <small style="color:var(--text-muted)">🔒 approval gate</small></span></div>
-          <div class="flow-step" style="width:100%;border-color:var(--green);"><strong>Promote to Production</strong><br/><small style="color:var(--green)">npm publish --tag latest</small></div>
-          <div style="text-align:center;"><span class="flow-arrow">↓</span></div>
-          <div class="flow-step flow-slack" style="width:100%;background:var(--green-dim);"><strong>💬 Slack</strong> — Release notification + GitHub Release created</div>
-        </div>
-        <div style="margin-top:8px;">
-          <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/blob/main/.github/workflows/reusable-publish.yml" target="_blank" style="font-size:0.62rem;">📄 Publish Workflow</a>
+        <p style="margin-bottom:16px">Two-stage publish with approval gate + Slack notification.</p>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="flow-step" style="width:100%"><strong>Build &amp; Test</strong></div>
+          <div style="text-align:center"><span class="flow-arr">↓</span></div>
+          <div class="flow-step" style="width:100%;border-color:var(--gold)"><strong>Staging</strong> — <code>npm publish --tag next</code></div>
+          <div style="text-align:center"><span class="flow-arr">↓ <small style="color:var(--text-dim)">🔒 approval</small></span></div>
+          <div class="flow-step" style="width:100%;border-color:var(--green)"><strong>Production</strong> — <code>npm publish --tag latest</code></div>
+          <div style="text-align:center"><span class="flow-arr">↓</span></div>
+          <div class="flow-step flow-slack" style="width:100%"><strong>Slack</strong> — release notification</div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══════ SLIDE 15: ADVANCED PATTERNS ═══════ -->
-<div class="slide" data-slide="14" data-part="2">
-  <span class="part-label">Part 2 — Details</span>
+<!-- ══════════════════════════════════════════
+     SLIDE 14 — Patterns Demonstrated
+     ══════════════════════════════════════════ -->
+<div class="slide" data-slide="13">
+  <span class="part">Part 2</span>
   <div class="content">
-    <h2>Advanced GHA Patterns Demonstrated</h2>
-    <div class="three-col">
-      <div class="card card-gold"><span class="card-icon">🧩</span><h3>Dynamic Matrix</h3><p><span class="inline-code">fromJSON()</span> expands axes from runtime inputs.</p></div>
-      <div class="card card-gold"><span class="card-icon">🐘</span><h3>Service Containers</h3><p>PostgreSQL + Redis as native job services with health checks.</p></div>
-      <div class="card card-gold"><span class="card-icon">🚪</span><h3>Environment Gates</h3><p>Approval workflows + deployment protection rules.</p></div>
-      <div class="card card-gold"><span class="card-icon">🐳</span><h3>Docker BuildX</h3><p>GHA-backed layer cache for fast, reproducible builds.</p></div>
-      <div class="card card-gold"><span class="card-icon">🔐</span><h3>OIDC Federation</h3><p>Secretless cloud auth via <span class="inline-code">id-token: write</span>.</p></div>
-      <div class="card card-gold"><span class="card-icon">📊</span><h3>Job Summaries</h3><p>Rich Markdown reports in the Actions UI.</p></div>
-      <div class="card card-gold"><span class="card-icon">⚡</span><h3>Concurrency</h3><p>Auto-cancel redundant runs; deploy group locks.</p></div>
-      <div class="card card-gold"><span class="card-icon">💬</span><h3>Slack Notifications</h3><p>Color-coded alerts on success 🟢, failure 🔴, and release 🔵.</p></div>
-      <div class="card card-gold"><span class="card-icon">📦</span><h3>Artifact Passing</h3><p>Build once, deploy across jobs with upload/download.</p></div>
+    <h2>GHA Patterns Demonstrated</h2>
+    <p class="section-desc">Each pattern was implemented and validated in this POC.</p>
+
+    <div class="grid-3">
+      <div class="card card-sm card-accent"><h3>Dynamic Matrix</h3><p><code>fromJSON()</code> expands axes from runtime inputs.</p></div>
+      <div class="card card-sm card-accent"><h3>Service Containers</h3><p>PostgreSQL + Redis as native job services with health checks.</p></div>
+      <div class="card card-sm card-accent"><h3>Environment Gates</h3><p>Approval workflows + deployment protection rules.</p></div>
+      <div class="card card-sm card-accent"><h3>Docker BuildX</h3><p>GHA-backed layer cache for fast, reproducible builds.</p></div>
+      <div class="card card-sm card-accent"><h3>Concurrency Controls</h3><p>Auto-cancel redundant runs; deploy group locks.</p></div>
+      <div class="card card-sm card-accent"><h3>Slack Notifications</h3><p>Color-coded alerts: success, failure, and release.</p></div>
+      <div class="card card-sm card-accent"><h3>Job Summaries</h3><p>Rich Markdown reports in the Actions UI.</p></div>
+      <div class="card card-sm card-accent"><h3>Artifact Passing</h3><p>Build once, deploy across jobs via upload/download.</p></div>
+      <div class="card card-sm card-accent"><h3>Path-Based Triggers</h3><p>Skip CI for docs-only changes with <code>on.push.paths</code>.</p></div>
     </div>
   </div>
 </div>
 
-<!-- ═══════ SLIDE 16: CLOSING ═══════ -->
-<div class="slide title-slide" data-slide="15" data-part="2">
+<!-- ══════════════════════════════════════════
+     SLIDE 15 — Closing
+     ══════════════════════════════════════════ -->
+<div class="slide title-slide" data-slide="14">
   <div class="content">
-    <span class="title-logo">🔗</span>
+    <svg width="56" height="56" viewBox="0 0 56 56" style="margin-bottom:16px"><circle cx="28" cy="28" r="26" fill="none" stroke="var(--gold)" stroke-width="2"/><path d="M20 28h16M28 20v16" stroke="var(--gold)" stroke-width="2.5" stroke-linecap="round"/></svg>
     <h1>Explore the <span class="gold">Code &amp; Docs</span></h1>
-    <div style="margin-top:24px;">
-      <div class="three-col" style="max-width:720px;margin:0 auto;">
-        <a href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows" target="_blank" class="card" style="text-align:center;text-decoration:none;color:inherit;">
-          <span class="card-icon">⚡</span>
-          <h3>Shared Workflows</h3>
-          <p>Hub repo + Actions</p>
-        </a>
-        <a href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/actions" target="_blank" class="card" style="text-align:center;text-decoration:none;color:inherit;">
-          <span class="card-icon">📊</span>
-          <h3>Live Dashboard</h3>
-          <p>GitHub Pages</p>
-        </a>
-        <a href="https://mruthyunjaya-lakkappanavar.github.io/gha-reusable-workflows-docs/docs/" target="_blank" class="card" style="text-align:center;text-decoration:none;color:inherit;">
-          <span class="card-icon">📖</span>
-          <h3>Full Documentation</h3>
-          <p>Architecture · Usage · Patterns</p>
-        </a>
-      </div>
+
+    <div class="grid-3" style="max-width:700px;margin:28px auto 0">
+      <a href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows" target="_blank" class="card" style="text-align:center;text-decoration:none;color:inherit">
+        <h3>Shared Workflows</h3>
+        <p>Hub repo + Actions</p>
+      </a>
+      <a href="https://github.com/mruthyunjaya-lakkappanavar/github-shared-workflows/actions" target="_blank" class="card" style="text-align:center;text-decoration:none;color:inherit">
+        <h3>Live Dashboard</h3>
+        <p>GitHub Pages</p>
+      </a>
+      <a href="https://mruthyunjaya-lakkappanavar.github.io/gha-reusable-workflows-docs/docs/" target="_blank" class="card" style="text-align:center;text-decoration:none;color:inherit">
+        <h3>Documentation</h3>
+        <p>Architecture · Patterns</p>
+      </a>
     </div>
-    <div style="margin-top:24px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-      <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-python" target="_blank">🐍 Python App</a>
-      <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-node" target="_blank">📦 Node App</a>
-      <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-go" target="_blank">🐹 Go App</a>
-      <a class="demo-link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-lib-node" target="_blank">📚 Node Library</a>
+
+    <div style="margin-top:24px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-python" target="_blank">Python App</a>
+      <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-node" target="_blank">Node App</a>
+      <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-app-go" target="_blank">Go App</a>
+      <a class="link" href="https://github.com/mruthyunjaya-lakkappanavar/sample-lib-node" target="_blank">Node Library</a>
     </div>
-    <div class="meta" style="margin-top:28px;">
-      <p>All repositories are public — inspect, fork, and reuse.</p>
-      <p style="margin-top:8px;color:var(--gold);font-size:1.05rem;">
-        <strong>We're ready to build, optimize, or take on any CI/CD task in GitHub Actions.</strong>
-      </p>
-    </div>
+
+    <p style="margin-top:28px;color:var(--gold);font-size:1rem;font-weight:600">
+      We're ready to build, optimize, or take on any CI/CD workflow in GitHub Actions.
+    </p>
   </div>
 </div>
 
-</div><!-- /deck -->
+</div>
 
-<!-- ─── Navigation ─── -->
+<!-- Navigation -->
 <nav class="nav">
   <button onclick="prev()" title="Previous (←)">◀</button>
   <div class="dots" id="dots"></div>
-  <span class="slide-counter" id="counter">1 / 16</span>
+  <span class="counter" id="counter">1 / 15</span>
   <button onclick="next()" title="Next (→)">▶</button>
 </nav>
 
 <script>
 'use strict';
-const slides = document.querySelectorAll('.slide');
-const dotsEl = document.getElementById('dots');
-const counterEl = document.getElementById('counter');
-let current = 0;
-
-slides.forEach((s, i) => {
-  const d = document.createElement('span');
-  const part = s.getAttribute('data-part');
-  d.className = 'dot' + (i === 0 ? ' active' : '') + (part === '2' || part === 'divider' ? ' part2' : '');
-  d.onclick = () => goTo(i);
-  dotsEl.appendChild(d);
-});
-
-function goTo(n) {
-  if (n < 0 || n >= slides.length || n === current) return;
-  const p = current;
-  slides[current].classList.remove('active');
-  slides[current].classList.add('exit-left');
-  current = n;
-  slides[current].classList.add('active');
-  setTimeout(() => slides[p].classList.remove('exit-left'), 500);
-  updateUI();
-}
-function next() { goTo(current + 1); }
-function prev() { goTo(current - 1); }
-
-function updateUI() {
-  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
-  counterEl.textContent = (current + 1) + ' / ' + slides.length;
-}
-
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
-  if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
-  if (e.key === 'Home') { e.preventDefault(); goTo(0); }
-  if (e.key === 'End') { e.preventDefault(); goTo(slides.length - 1); }
-});
-
-let touchX = 0;
-document.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; });
-document.addEventListener('touchend', (e) => {
-  const dx = touchX - e.changedTouches[0].clientX;
-  if (Math.abs(dx) > 50) { dx > 0 ? next() : prev(); }
-});
+const slides=document.querySelectorAll('.slide'),dotsEl=document.getElementById('dots'),counterEl=document.getElementById('counter');
+let cur=0;
+slides.forEach((_,i)=>{const d=document.createElement('span');d.className='dot'+(i===0?' active':'');d.onclick=()=>go(i);dotsEl.appendChild(d)});
+function go(n){if(n<0||n>=slides.length||n===cur)return;const p=cur;slides[p].classList.remove('active');slides[p].classList.add('exit');cur=n;slides[cur].classList.add('active');setTimeout(()=>slides[p].classList.remove('exit'),450);update()}
+function next(){go(cur+1)}function prev(){go(cur-1)}
+function update(){document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===cur));counterEl.textContent=(cur+1)+' / '+slides.length}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();next()}if(e.key==='ArrowLeft'){e.preventDefault();prev()}if(e.key==='Home'){e.preventDefault();go(0)}if(e.key==='End'){e.preventDefault();go(slides.length-1)}});
+let tx=0;document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX});document.addEventListener('touchend',e=>{const dx=tx-e.changedTouches[0].clientX;if(Math.abs(dx)>50){dx>0?next():prev()}});
 </script>
-
 </body>
 </html>

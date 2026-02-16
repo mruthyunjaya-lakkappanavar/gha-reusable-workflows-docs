@@ -44,7 +44,7 @@ nav:
     - Composite Actions: 04-composite-actions.md
     - Consumer Repos: 05-consumer-repos.md
   - Part 2 — Deep Dive:
-    - GHA Platform Capabilities: 06-jenkins-to-gha-migration.md
+    - GHA Platform Capabilities: 06-gha-platform-capabilities.md
     - Live Dashboard: 07-dashboard.md
     - Advanced Patterns: 08-advanced-patterns.md
 

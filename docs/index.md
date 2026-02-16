@@ -22,6 +22,6 @@ Start here for the big picture: what we built, what it demonstrates, and why it 
 
 Detailed technical reference for those who want to explore further.
 
-6. **[GHA Platform Capabilities](06-jenkins-to-gha-migration.md)** — Full feature coverage and comparison with traditional CI tools
+6. **[GHA Platform Capabilities](06-gha-platform-capabilities.md)** — Full feature coverage demonstrated in this POC
 7. **[Live Dashboard](07-dashboard.md)** — Cross-repo CI/CD visibility dashboard
-8. **[Advanced GHA Patterns](08-advanced-patterns.md)** — Dynamic matrix, service containers, environment gates, OIDC, and more
+8. **[Advanced GHA Patterns](08-advanced-patterns.md)** — Dynamic matrix, service containers, environment gates, and more

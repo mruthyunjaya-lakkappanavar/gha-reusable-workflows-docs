@@ -197,7 +197,6 @@ Manual dispatch or release tag
 |---|---|
 | **Dependency scanning** | Trivy filesystem scan on every CI run |
 | **Secret management** | GitHub Secrets with `secrets:` passthrough (never exposed in logs) |
-| **OIDC federation** | `id-token: write` for cloud auth (no stored secrets for cloud providers) |
 | **Dependency updates** | Dependabot configured for automated PR-based updates |
 | **Immutable logs** | GitHub-hosted, tamper-proof audit trail |
 | **Scoped tokens** | `GITHUB_TOKEN` auto-scoped per-job with minimal permissions |
